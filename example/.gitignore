@@ -1,0 +1,30 @@
+# Dependency directories
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Symbolic links
+packages
+
+# Flutter/Dart specific
+ios/Flutter/.last_build_id
+unused-assets.json
+**/*.js_
+**/*.js_server_test.sum
+**/*.jshash
+**/*.part.js
+
+# IDE Specific (Highly Recommended)
+.idea/
+.vscode/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+
+# OS Specific
+.DS_Store
+Thumbs.db
