@@ -58,17 +58,26 @@ The Arsenal is "Grid-Aware." If you remove a module from your dashboard, it inst
   
 
 ```dart
-final  List<ZeusModule> myModules = [
-
-	ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30),
-
-	ZeusModule(id: 'module_b', x: 40, y: 0, w: 80, h: 30),
-
+// 1. Modules currently displayed on the grid
+List<ZeusModule> myModules = [
+  ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30),
 ];
+
+// 2. Modules waiting in the "Arsenal" side menu
+List<ZeusModule> myArsenal = [
+  ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30),
+  ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20),
+];
+
 ```
 ### Initialise the ZeusGrid
 
 ```dart
+Switch(
+  value: _isEditing,
+  onChanged: (v) => setState(() => _isEditing = v),
+  activeColor: Colors.greenAccent,
+),
 ZeusGrid(
 	isEditing: _isEditMode,
 	modules: myModules,
