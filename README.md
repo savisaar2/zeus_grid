@@ -14,7 +14,7 @@ The entire grid acts like a "living canvas." Instead of elements jumping around 
 
   
 
-![Main Page](assets/main_page.png)
+![Main Page](assets/front_page.png)
 
   
 
@@ -27,7 +27,7 @@ Visual Feedback: The interface communicates with you—turning Cyan when a move 
 
 ### Move
 
-![Edit Page](assets/edit_page.png)  
+![Edit Page](assets/edit_mode.png)  
 
 Simply press and hold any module to "un-dock" it from the grid. The interface provides instant feedback, allowing you to slide complex data monitors across the screen.
 
