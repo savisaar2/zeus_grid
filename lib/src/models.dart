@@ -7,6 +7,8 @@ class ZeusModule {
   final int y;
   final int w;
   final int h;
+  final int minW;
+  final int minH;
 
   const ZeusModule({
     required this.id,
@@ -14,6 +16,8 @@ class ZeusModule {
     required this.y,
     required this.w,
     required this.h,
+    required this.minW,
+    required this.minH,
   });
 
   // 🎯 The "Professional" way to update models in Flutter
@@ -24,6 +28,8 @@ class ZeusModule {
       y: y ?? this.y,
       w: w ?? this.w,
       h: h ?? this.h,
+      minW: minW,
+      minH: minH,
     );
   }
 
