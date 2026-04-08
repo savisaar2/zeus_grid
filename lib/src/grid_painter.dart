@@ -37,6 +37,9 @@ class GridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant GridPainter oldDelegate) =>
-      oldDelegate.style != style || oldDelegate.cellW != cellW;
+  bool shouldRepaint(covariant GridPainter oldDelegate) {
+    return oldDelegate.style != style ||
+        oldDelegate.cellW != cellW ||
+        oldDelegate.cellH != cellH;
+  }
 }

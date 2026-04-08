@@ -110,27 +110,11 @@ class _ZeusGridState extends State<ZeusGrid> {
     final int w = isActive ? session!.preview.w : m.w;
     final int h = isActive ? session!.preview.h : m.h;
 
-    // --- ENFORCE PHYSICAL LIMITS ---
-    // We calculate what the width/height SHOULD be based on the grid.
-    double calculatedW = w * cellW;
-    double calculatedH = h * cellH;
-
-    // We define a "Floor".
-    // Option A: Use a fixed minimum (e.g., 100px).
-    // Option B: Use a relative minimum (e.g., m.minW * 30px) so small modules
-    // can stay smaller than large modules.
-    double minPhysicalW =
-        m.minW * 20.0; // Adjust '20.0' to your preferred minimum cell size
-    double minPhysicalH = m.minH * 20.0;
-
-    final double finalW = calculatedW.clamp(minPhysicalW, double.infinity);
-    final double finalH = calculatedH.clamp(minPhysicalH, double.infinity);
-
     return Positioned(
       left: (x * cellW) - 30,
       top: (y * cellH) - 30,
-      width: finalW + 60, // The 60 adds padding for the resize handles
-      height: finalH + 60,
+      width: (w * cellW) + 60,
+      height: (h * cellH) + 60,
       child: MouseRegion(
         onEnter: (_) =>
             widget.isEditing ? setState(() => _focusedModuleId = m.id) : null,
@@ -427,25 +411,19 @@ class _ZeusGridState extends State<ZeusGrid> {
     int h = p.h;
     final r = x + w;
     final b = y + h;
-
     final name = t.name.toLowerCase();
-
-    // 1. VERTICAL LOGIC (Independent)
     if (name.contains('top')) {
-      y = gY.clamp(0, b - p.minH);
+      y = gY.clamp(0, b - 5);
       h = b - y;
     } else if (name.contains('bottom')) {
-      h = (gY - y).clamp(p.minH, widget.rows - y);
+      h = (gY - y).clamp(5, widget.rows - y);
     }
-
-    // 2. HORIZONTAL LOGIC (Independent)
     if (name.contains('left')) {
-      x = gX.clamp(0, r - p.minW);
+      x = gX.clamp(0, r - 5);
       w = r - x;
     } else if (name.contains('right')) {
-      w = (gX - x).clamp(p.minW, widget.columns - x);
+      w = (gX - x).clamp(5, widget.columns - x);
     }
-
     return p.copyWith(x: x, y: y, w: w, h: h);
   }
 
