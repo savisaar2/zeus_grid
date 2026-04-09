@@ -35,9 +35,9 @@ class ZeusGrid extends StatefulWidget {
 }
 
 const double _kPadding = 30.0;
-const double _kHandleLength = 60.0;
+const double _kHandleLength = 40.0;
 const double _kHandleThickness = 5.0;
-const double _kHitAreaSize = 100.0;
+const double _kHitAreaSize = 80.0;
 const double _kHandleInset = 20.0;
 
 class _ZeusGridState extends State<ZeusGrid> {
@@ -350,76 +350,76 @@ class _ZeusGridState extends State<ZeusGrid> {
           Positioned(
             left: left,
             top: top,
-            width: 60,
-            height: 5,
+            width: _kHandleLength,
+            height: _kHandleThickness,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
             left: left,
             top: top,
-            width: 5,
-            height: 60,
+            width: _kHandleThickness,
+            height: _kHandleLength,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.topRight) ...[
           Positioned(
             left: left,
             top: top,
-            width: 60,
-            height: 5,
+            width: _kHandleLength,
+            height: _kHandleThickness,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + 55,
+            left: left! + (_kHandleLength - _kHandleThickness),
             top: top,
-            width: 5,
-            height: 60,
+            width: _kHandleThickness,
+            height: _kHandleLength,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.bottomRight) ...[
           Positioned(
             left: left,
             top: top,
-            width: 60,
-            height: 5,
+            width: _kHandleLength,
+            height: _kHandleThickness,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + 55,
-            top: top! - 55,
-            width: 5,
-            height: 60,
+            left: left! + (_kHandleLength - _kHandleThickness),
+            top: top! - (_kHandleLength - _kHandleThickness),
+            width: _kHandleThickness,
+            height: _kHandleLength,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.bottomLeft) ...[
           Positioned(
             left: left,
             top: top,
-            width: 60,
-            height: 5,
+            width: _kHandleLength,
+            height: _kHandleThickness,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
             left: left,
-            top: top! - 55,
-            width: 5,
-            height: 60,
+            top: top! - (_kHandleLength - _kHandleThickness),
+            width: _kHandleThickness,
+            height: _kHandleLength,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.top || handle == ZeusHandle.bottom) ...[
           Positioned(
             left: left,
             top: top,
-            width: 60,
-            height: 5,
+            width: _kHandleLength,
+            height: _kHandleThickness,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else ...[
           Positioned(
             left: left,
             top: top,
-            width: 5,
-            height: 60,
+            width: _kHandleThickness,
+            height: _kHandleLength,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ],
