@@ -443,11 +443,18 @@ class _ZeusGridState extends State<ZeusGrid> {
               : widget.moduleStyle.warningBorderColor)
         : (widget.isEditing ? Colors.white.withAlpha(26) : Colors.transparent);
 
+    final bgColor = isActive
+        ? Color.alphaBlend(
+            border.withAlpha(50),
+            widget.moduleStyle.color,
+          )
+        : widget.moduleStyle.color;
+
     return Opacity(
       opacity: isActive ? widget.moduleStyle.activeOpacity : 1.0,
       child: Container(
         decoration: BoxDecoration(
-          color: widget.moduleStyle.color,
+          color: bgColor,
           border: Border.all(
             color: border,
             width: (isFocused || isActive) ? 2.0 : 1.0,
@@ -649,7 +656,9 @@ class _ZeusGridState extends State<ZeusGrid> {
     final s = _activeSession.value;
     if (s == null) return;
 
-    if (s.isValid && (s.isFromDrawer ? s.isOverGrid : true)) {
+    if (!s.isFromDrawer && !s.isOverGrid) {
+      widget.onModuleRemove(s.id);
+    } else if (s.isValid && s.isOverGrid) {
       widget.onModuleUpdate(s.preview);
     }
 
@@ -723,6 +732,12 @@ class _ZeusGridState extends State<ZeusGrid> {
                     itemCount: widget.unplacedModules.length,
                     itemBuilder: (context, i) {
                       final m = widget.unplacedModules[i];
+                      final isDragged = session?.isFromDrawer == true && session?.id == m.id;
+                      
+                      if (isDragged) {
+                        return const SizedBox.shrink();
+                      }
+
                       return Listener(
                         behavior: HitTestBehavior.opaque,
                         onPointerDown: (e) => _startSession(m, e, true),
