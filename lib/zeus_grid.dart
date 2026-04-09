@@ -35,10 +35,10 @@ class ZeusGrid extends StatefulWidget {
 }
 
 const double _kPadding = 30.0;
-const double _kHandleLength = 40.0;
-const double _kHandleThickness = 5.0;
-const double _kHitAreaSize = 80.0;
-const double _kHandleInset = 20.0;
+const double _kHandleLength = 15.0;
+const double _kHandleThickness = 2.0;
+const double _kHitAreaSize = 60.0;
+const double _kHandleInset = 8.0;
 
 class _ZeusGridState extends State<ZeusGrid> {
   final GlobalKey _gridKey = GlobalKey();
@@ -135,6 +135,13 @@ class _ZeusGridState extends State<ZeusGrid> {
     final double outerW = physicalW + (_kPadding * 2);
     final double outerH = physicalH + (_kPadding * 2);
 
+    final hLen = (physicalW < (_kHandleLength * 3) || physicalH < (_kHandleLength * 3))
+        ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
+        : _kHandleLength;
+    final hitS = (physicalW < (_kHitAreaSize * 2) || physicalH < (_kHitAreaSize * 2))
+        ? (physicalW < physicalH ? physicalW / 2 : physicalH / 2)
+        : _kHitAreaSize;
+
     return Positioned(
       left: (x * cellW) - _kPadding,
       top: (y * cellH) - _kPadding,
@@ -195,96 +202,96 @@ class _ZeusGridState extends State<ZeusGrid> {
                 ZeusHandle.topLeft,
                 hitLeft: _kPadding,
                 hitTop: _kPadding,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
+                hitWidth: hitS,
+                hitHeight: hitS,
                 left: _kPadding + _kHandleInset,
                 top: _kPadding + _kHandleInset,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.topRight,
-                hitLeft: _kPadding + physicalW - _kHitAreaSize,
+                hitLeft: _kPadding + physicalW - hitS,
                 hitTop: _kPadding,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
-                left: _kPadding + physicalW - _kHandleInset - _kHandleLength,
+                hitWidth: hitS,
+                hitHeight: hitS,
+                left: _kPadding + physicalW - _kHandleInset - hLen,
                 top: _kPadding + _kHandleInset,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottomRight,
-                hitLeft: _kPadding + physicalW - _kHitAreaSize,
-                hitTop: _kPadding + physicalH - _kHitAreaSize,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
-                left: _kPadding + physicalW - _kHandleInset - _kHandleLength,
+                hitLeft: _kPadding + physicalW - hitS,
+                hitTop: _kPadding + physicalH - hitS,
+                hitWidth: hitS,
+                hitHeight: hitS,
+                left: _kPadding + physicalW - _kHandleInset - hLen,
                 top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottomLeft,
                 hitLeft: _kPadding,
-                hitTop: _kPadding + physicalH - _kHitAreaSize,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
+                hitTop: _kPadding + physicalH - hitS,
+                hitWidth: hitS,
+                hitHeight: hitS,
                 left: _kPadding + _kHandleInset,
                 top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.top,
-                hitLeft: _kPadding + physicalW / 2 - (_kHitAreaSize / 2),
+                hitLeft: _kPadding + physicalW / 2 - (hitS / 2),
                 hitTop: _kPadding,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
-                left: _kPadding + physicalW / 2 - (_kHandleLength / 2),
+                hitWidth: hitS,
+                hitHeight: hitS,
+                left: _kPadding + physicalW / 2 - (hLen / 2),
                 top: _kPadding + _kHandleInset,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottom,
-                hitLeft: _kPadding + physicalW / 2 - (_kHitAreaSize / 2),
-                hitTop: _kPadding + physicalH - _kHitAreaSize,
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
-                left: _kPadding + physicalW / 2 - (_kHandleLength / 2),
+                hitLeft: _kPadding + physicalW / 2 - (hitS / 2),
+                hitTop: _kPadding + physicalH - hitS,
+                hitWidth: hitS,
+                hitHeight: hitS,
+                left: _kPadding + physicalW / 2 - (hLen / 2),
                 top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
-                width: _kHandleLength,
+                width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.left,
                 hitLeft: _kPadding,
-                hitTop: _kPadding + physicalH / 2 - (_kHitAreaSize / 2),
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
+                hitTop: _kPadding + physicalH / 2 - (hitS / 2),
+                hitWidth: hitS,
+                hitHeight: hitS,
                 left: _kPadding + _kHandleInset,
-                top: _kPadding + physicalH / 2 - (_kHandleLength / 2),
+                top: _kPadding + physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
-                height: _kHandleLength,
+                height: hLen,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.right,
-                hitLeft: _kPadding + physicalW - _kHitAreaSize,
-                hitTop: _kPadding + physicalH / 2 - (_kHitAreaSize / 2),
-                hitWidth: _kHitAreaSize,
-                hitHeight: _kHitAreaSize,
+                hitLeft: _kPadding + physicalW - hitS,
+                hitTop: _kPadding + physicalH / 2 - (hitS / 2),
+                hitWidth: hitS,
+                hitHeight: hitS,
                 left: _kPadding + physicalW - _kHandleInset - _kHandleThickness,
-                top: _kPadding + physicalH / 2 - (_kHandleLength / 2),
+                top: _kPadding + physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
-                height: _kHandleLength,
+                height: hLen,
               ),
               Positioned(
                 left: _kPadding + 8,
@@ -327,10 +334,10 @@ class _ZeusGridState extends State<ZeusGrid> {
     double? hitWidth,
     double? hitHeight,
   }) {
-    final hLeft = hitLeft ?? left ?? (right != null ? right! - 30 : 0);
-    final hTop = hitTop ?? top ?? (bottom != null ? bottom! - 30 : 0);
-    final hWidth = hitWidth ?? 30;
-    final hHeight = hitHeight ?? 30;
+    final hLeft = hitLeft ?? left ?? (right != null ? right! - _kHitAreaSize : 0);
+    final hTop = hitTop ?? top ?? (bottom != null ? bottom! - _kHitAreaSize : 0);
+    final hWidth = hitWidth ?? _kHitAreaSize;
+    final hHeight = hitHeight ?? _kHitAreaSize;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -350,76 +357,76 @@ class _ZeusGridState extends State<ZeusGrid> {
           Positioned(
             left: left,
             top: top,
-            width: _kHandleLength,
-            height: _kHandleThickness,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
             left: left,
             top: top,
-            width: _kHandleThickness,
-            height: _kHandleLength,
+            width: height,
+            height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.topRight) ...[
           Positioned(
             left: left,
             top: top,
-            width: _kHandleLength,
-            height: _kHandleThickness,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + (_kHandleLength - _kHandleThickness),
+            left: left! + (width! - height!),
             top: top,
-            width: _kHandleThickness,
-            height: _kHandleLength,
+            width: height,
+            height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.bottomRight) ...[
           Positioned(
             left: left,
             top: top,
-            width: _kHandleLength,
-            height: _kHandleThickness,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + (_kHandleLength - _kHandleThickness),
-            top: top! - (_kHandleLength - _kHandleThickness),
-            width: _kHandleThickness,
-            height: _kHandleLength,
+            left: left! + (width! - height!),
+            top: top! - (width! - height!),
+            width: height,
+            height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.bottomLeft) ...[
           Positioned(
             left: left,
             top: top,
-            width: _kHandleLength,
-            height: _kHandleThickness,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
             left: left,
-            top: top! - (_kHandleLength - _kHandleThickness),
-            width: _kHandleThickness,
-            height: _kHandleLength,
+            top: top! - (width! - height!),
+            width: height,
+            height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else if (handle == ZeusHandle.top || handle == ZeusHandle.bottom) ...[
           Positioned(
             left: left,
             top: top,
-            width: _kHandleLength,
-            height: _kHandleThickness,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ] else ...[
           Positioned(
             left: left,
             top: top,
-            width: _kHandleThickness,
-            height: _kHandleLength,
+            width: width,
+            height: height,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ],
