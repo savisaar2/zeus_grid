@@ -100,13 +100,23 @@ class ZeusSession {
 }
 
 class GridStyle {
+  final Color backgroundColor;
   final Color lineColor;
+  final Color majorLineColor;
   final double lineWidth;
+  final double majorLineWidth;
+  final int minorInterval;
+  final int majorInterval;
   final bool showGrid;
 
   const GridStyle({
-    this.lineColor = const Color.fromARGB(13, 255, 255, 255),
-    this.lineWidth = 0.5,
+    this.backgroundColor = const Color(0xFF080808),
+    this.lineColor = const Color.fromARGB(25, 255, 255, 255),
+    this.majorLineColor = const Color.fromARGB(60, 255, 255, 255),
+    this.lineWidth = 1.0,
+    this.majorLineWidth = 1.0,
+    this.minorInterval = 2,
+    this.majorInterval = 10,
     this.showGrid = true,
   });
 }

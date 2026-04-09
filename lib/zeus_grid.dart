@@ -34,11 +34,11 @@ class ZeusGrid extends StatefulWidget {
   State<ZeusGrid> createState() => _ZeusGridState();
 }
 
-const double _kPadding = 30.0;
+const double _kPadding = 0.0;
 const double _kHandleLength = 15.0;
 const double _kHandleThickness = 2.0;
-const double _kHitAreaSize = 60.0;
-const double _kHandleInset = 8.0;
+const double _kHitAreaSize = 40.0;
+const double _kHandleInset = 10.0;
 
 class _ZeusGridState extends State<ZeusGrid> {
   final GlobalKey _gridKey = GlobalKey();
@@ -60,7 +60,7 @@ class _ZeusGridState extends State<ZeusGrid> {
           onPointerCancel: (_) => _activeSession.value = null,
           child: Stack(
             children: [
-              Container(color: Colors.black),
+              Container(color: widget.gridStyle.backgroundColor),
               _buildVirtualGrid(cellW, cellH),
               _buildArsenalDrawer(widget.isEditing, cellW, cellH),
             ],
@@ -132,9 +132,6 @@ class _ZeusGridState extends State<ZeusGrid> {
     final double physicalW = (w * cellW).clamp(m.minW * cellW, double.infinity);
     final double physicalH = (h * cellH).clamp(m.minH * cellH, double.infinity);
 
-    final double outerW = physicalW + (_kPadding * 2);
-    final double outerH = physicalH + (_kPadding * 2);
-
     final hLen = (physicalW < (_kHandleLength * 3) || physicalH < (_kHandleLength * 3))
         ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
         : _kHandleLength;
@@ -143,19 +140,19 @@ class _ZeusGridState extends State<ZeusGrid> {
         : _kHitAreaSize;
 
     return Positioned(
-      left: (x * cellW) - _kPadding,
-      top: (y * cellH) - _kPadding,
-      width: outerW,
-      height: outerH,
+      left: x * cellW,
+      top: y * cellH,
+      width: physicalW,
+      height: physicalH,
       child: MouseRegion(
         onHover: (e) {
           if (!widget.isEditing || isActive) return;
           final lx = e.localPosition.dx;
           final ly = e.localPosition.dy;
-          if (lx >= _kPadding &&
-              lx <= _kPadding + physicalW &&
-              ly >= _kPadding &&
-              ly <= _kPadding + physicalH) {
+          if (lx >= 0 &&
+              lx <= physicalW &&
+              ly >= 0 &&
+              ly <= physicalH) {
             if (_focusedModuleId != m.id) {
               setState(() => _focusedModuleId = m.id);
             }
@@ -173,26 +170,21 @@ class _ZeusGridState extends State<ZeusGrid> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned(
-              left: _kPadding,
-              top: _kPadding,
-              child: SizedBox(
-                width: physicalW,
-                height: physicalH,
-                child: Listener(
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: (e) =>
-                      widget.isEditing ? _startSession(m, e, false) : null,
-                  child: _buildCard(
-                    m,
-                    isActive,
-                    isFocused,
-                    isValid,
-                    x,
-                    y,
-                    w,
-                    h,
-                  ),
+            // Move Listener wraps only the Card
+            Positioned.fill(
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (e) =>
+                    widget.isEditing ? _startSession(m, e, false) : null,
+                child: _buildCard(
+                  m,
+                  isActive,
+                  isFocused,
+                  isValid,
+                  x,
+                  y,
+                  w,
+                  h,
                 ),
               ),
             ),
@@ -200,107 +192,75 @@ class _ZeusGridState extends State<ZeusGrid> {
               _buildResizeHandle(
                 m,
                 ZeusHandle.topLeft,
-                hitLeft: _kPadding,
-                hitTop: _kPadding,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + _kHandleInset,
-                top: _kPadding + _kHandleInset,
+                left: _kHandleInset,
+                top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.topRight,
-                hitLeft: _kPadding + physicalW - hitS,
-                hitTop: _kPadding,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + physicalW - _kHandleInset - hLen,
-                top: _kPadding + _kHandleInset,
+                left: physicalW - _kHandleInset - hLen,
+                top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottomRight,
-                hitLeft: _kPadding + physicalW - hitS,
-                hitTop: _kPadding + physicalH - hitS,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + physicalW - _kHandleInset - hLen,
-                top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
+                left: physicalW - _kHandleInset - hLen,
+                top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottomLeft,
-                hitLeft: _kPadding,
-                hitTop: _kPadding + physicalH - hitS,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + _kHandleInset,
-                top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
+                left: _kHandleInset,
+                top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.top,
-                hitLeft: _kPadding + physicalW / 2 - (hitS / 2),
-                hitTop: _kPadding,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + physicalW / 2 - (hLen / 2),
-                top: _kPadding + _kHandleInset,
+                left: physicalW / 2 - (hLen / 2),
+                top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.bottom,
-                hitLeft: _kPadding + physicalW / 2 - (hitS / 2),
-                hitTop: _kPadding + physicalH - hitS,
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + physicalW / 2 - (hLen / 2),
-                top: _kPadding + physicalH - _kHandleInset - _kHandleThickness,
+                left: physicalW / 2 - (hLen / 2),
+                top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.left,
-                hitLeft: _kPadding,
-                hitTop: _kPadding + physicalH / 2 - (hitS / 2),
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + _kHandleInset,
-                top: _kPadding + physicalH / 2 - (hLen / 2),
+                left: _kHandleInset,
+                top: physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
                 height: hLen,
               ),
               _buildResizeHandle(
                 m,
                 ZeusHandle.right,
-                hitLeft: _kPadding + physicalW - hitS,
-                hitTop: _kPadding + physicalH / 2 - (hitS / 2),
-                hitWidth: hitS,
-                hitHeight: hitS,
-                left: _kPadding + physicalW - _kHandleInset - _kHandleThickness,
-                top: _kPadding + physicalH / 2 - (hLen / 2),
+                left: physicalW - _kHandleInset - _kHandleThickness,
+                top: physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
                 height: hLen,
               ),
               Positioned(
-                left: _kPadding + 8,
-                top: _kPadding + 8,
+                left: 10,
+                top: 10,
                 child: GestureDetector(
                   onTap: () => widget.onModuleRemove(m.id),
                   child: Container(
-                    width: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     decoration: const BoxDecoration(
                       color: Colors.redAccent,
                       shape: BoxShape.circle,
@@ -308,7 +268,7 @@ class _ZeusGridState extends State<ZeusGrid> {
                     child: const Icon(
                       Icons.close,
                       color: Colors.white,
-                      size: 12,
+                      size: 14,
                     ),
                   ),
                 ),
@@ -334,25 +294,16 @@ class _ZeusGridState extends State<ZeusGrid> {
     double? hitWidth,
     double? hitHeight,
   }) {
-    final hLeft = hitLeft ?? left ?? (right != null ? right! - _kHitAreaSize : 0);
-    final hTop = hitTop ?? top ?? (bottom != null ? bottom! - _kHitAreaSize : 0);
     final hWidth = hitWidth ?? _kHitAreaSize;
     final hHeight = hitHeight ?? _kHitAreaSize;
+
+    // Center hit area over visual bars
+    final hLeft = hitLeft ?? (left != null ? left! - (hWidth - (width ?? 0)) / 2 : (right != null ? right! - hWidth : 0));
+    final hTop = hitTop ?? (top != null ? top! - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom! - hHeight : 0));
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Positioned(
-          left: hLeft,
-          top: hTop,
-          width: hWidth,
-          height: hHeight,
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (e) => _startSession(m, e, false, handle: handle),
-            child: const SizedBox.expand(),
-          ),
-        ),
         if (handle == ZeusHandle.topLeft) ...[
           Positioned(
             left: left,
@@ -430,6 +381,18 @@ class _ZeusGridState extends State<ZeusGrid> {
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
         ],
+        // Hit area moved to last position in Stack to be on top of visual bars
+        Positioned(
+          left: hLeft,
+          top: hTop,
+          width: hWidth,
+          height: hHeight,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) => _startSession(m, e, false, handle: handle),
+            child: const SizedBox.expand(),
+          ),
+        ),
       ],
     );
   }
@@ -512,6 +475,7 @@ class _ZeusGridState extends State<ZeusGrid> {
       anchor: anchor,
       isFromDrawer: fromDrawer,
       handle: handle,
+      isOverGrid: !fromDrawer,
       initialGridX: initialGridX,
       initialGridY: initialGridY,
       initialW: m.w,
@@ -535,13 +499,16 @@ class _ZeusGridState extends State<ZeusGrid> {
     _lastMousePosition = local;
 
     bool overGrid =
-        local.dx >= -20 &&
-        local.dx <= (rb.size.width + 20) &&
-        local.dy >= -20 &&
-        local.dy <= (rb.size.height + 20);
+        local.dx >= -40 &&
+        local.dx <= (rb.size.width + 40) &&
+        local.dy >= -40 &&
+        local.dy <= (rb.size.height + 40);
 
-    if (s.isFromDrawer && widget.isEditing) {
-      overGrid = local.dx < (rb.size.width - widget.menuStyle.width + 50);
+    if (widget.isEditing) {
+      // Must be significantly over the arsenal drawer to trigger removal (e.g. 100px in)
+      if (local.dx >= (rb.size.width - widget.menuStyle.width + 100)) {
+        overGrid = false;
+      }
     }
 
     ZeusModule p = s.preview;
@@ -663,7 +630,21 @@ class _ZeusGridState extends State<ZeusGrid> {
     final s = _activeSession.value;
     if (s == null) return;
 
-    if (!s.isFromDrawer && !s.isOverGrid) {
+    final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
+    final localMouse = _lastMousePosition;
+
+    bool hasMovedSignificantly = false;
+    if (localMouse != null) {
+      // Check if mouse moved more than a few pixels from the start
+      // Note: anchor might be offset for 'move' handle, but for resize it is the start point.
+      // For simplicity, we can just check if grid coordinates changed.
+      hasMovedSignificantly = s.preview.x != s.initialX ||
+          s.preview.y != s.initialY ||
+          s.preview.w != s.initialW ||
+          s.preview.h != s.initialH;
+    }
+
+    if (!s.isFromDrawer && !s.isOverGrid && hasMovedSignificantly) {
       widget.onModuleRemove(s.id);
     } else if (s.isValid && s.isOverGrid) {
       widget.onModuleUpdate(s.preview);
@@ -671,9 +652,7 @@ class _ZeusGridState extends State<ZeusGrid> {
 
     _activeSession.value = null;
 
-    final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
-    if (rb != null && _lastMousePosition != null) {
-      final localMouse = _lastMousePosition!;
+    if (rb != null && localMouse != null) {
       final module = s.preview;
       final cellW = rb.size.width / widget.columns;
       final cellH = rb.size.height / widget.rows;
