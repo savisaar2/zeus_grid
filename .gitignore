@@ -28,9 +28,3 @@ unused-assets.json
 # OS Specific
 .DS_Store
 Thumbs.db
-
-# AI Agents & Configuration
-AGENTS.md
-GEMINI.md
-.gemini/
-.geminiignore
