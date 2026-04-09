@@ -1,172 +1,92 @@
-# ZeusGrid: Grid Based Container Engine
+# ZeusGrid: Tactical Dashboard Engine
 
-ZeusGrid is a Flutter package that provides a normalised coordinated canvas for building high-density, interactive dashboards. Unlike responsive layouts that "reflow" content, ZeusGrid treats the screen as a tactical map where every element has a fixed, logical position.
-
-  
-
-## Features
-
-  
-
-### 📐 Smart Proportional Scaling
-
-The entire grid acts like a "living canvas." Instead of elements jumping around or stacking when you move from a desktop to a tablet, the grid perfectly shrinks or grows to fit the screen. Your layout remains consistent, meaning your most important data is always exactly where you expect it to be.
-
-  
+ZeusGrid is a high-performance Flutter package for building high-density, interactive dashboards. Unlike responsive layouts that "reflow" content, ZeusGrid treats the screen as a **tactical map** with a persistent 1:1 grid, allowing for pixel-perfect placement and mathematical consistency.
 
 ![Main Page](assets/front_page.png)
 
-  
+## Features
 
-### Resize
+### 📐 Persistent 1:1 Grid (Maths-Page Architecture)
+The grid acts as a stable foundation. Instead of scaling or skewing when the window is resized, the grid dynamically adds or removes columns and rows to fill the available space. This ensures your data monitors always maintain their intended aspect ratio and size.
 
-Multi-Axis Resizing: Tactical "Grab Bars" on every side allow you to stretch or shrink modules to highlight the data that matters most right now.
+### 🛡️ Viewport Boundary Pushing
+If the app viewport shrinks, ZeusGrid automatically detects which modules would be clipped and "pushes" them back into the visible boundary. Your layout adapts intelligently to protect your data visibility without distorting the grid.
 
-Visual Feedback: The interface communicates with you—turning Cyan when a move is perfect and Red if you’re trying to overlap another module.
+### 🎯 Precision Multi-Axis Resizing
+- **Grab Bars:** Subtle visual handles on every side and corner allow for intuitive stretching and shrinking.
+- **Smart Hit Areas:** Large, translucent hit areas ensure that resizing is effortless, while still allowing the module to be dragged from almost anywhere.
+- **Visual Feedback:** Real-time feedback tints—**Cyan** for valid placement and **Red** for collisions.
 
+### 🏗️ State-Driven "Arsenal" System
+The "Arsenal" is a sleek, animated side drawer for unplaced modules. It is fully grid-aware:
+- **Drag-to-Dock:** Drag an active module into the Arsenal to un-dock it.
+- **Auto-Sync:** Modules disappear from the menu when placed on the grid and return instantly when removed.
 
-### Move
+## Getting Started
 
-![Edit Page](assets/edit_mode.png)  
-
-Simply press and hold any module to "un-dock" it from the grid. The interface provides instant feedback, allowing you to slide complex data monitors across the screen.
-
-  
-
-As you move a module, the system automatically aligns it to the underlying grid units. This eliminates "messy" layouts and ensures every pixel of your screen is utilized efficiently.
-
-![Collision](assets/collision.png)
-  
-
-### Storage
-
-  
-
-The menu is a sleek, animated drawer that stays hidden during standard monitoring but slides into view instantly when you enter Edit Mode. This maximizes your screen real estate for high-density data.
-
-  
-
-The Arsenal is "Grid-Aware." If you remove a module from your dashboard, it instantly returns to the Arsenal. If you drag a module onto the grid, it disappears from the menu—ensuring you never have duplicate data monitors cluttering your workspace.
-
- 
-##  Getting started
-
-  
-
-###  Define  Your  Modules
-
-  
+### 1. Define Your Modules
 
 ```dart
-// 1. Modules currently displayed on the grid
+// Modules currently displayed on the grid
 List<ZeusModule> myModules = [
-  ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30),
+  ZeusModule(id: 'cpu_monitor', x: 10, y: 10, w: 40, h: 30, minW: 20, minH: 15),
 ];
 
-// 2. Modules waiting in the "Arsenal" side menu
+// Modules waiting in the "Arsenal" side menu
 List<ZeusModule> myArsenal = [
-  ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30),
-  ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20),
+  ZeusModule(id: 'network_graph', x: 0, y: 0, w: 80, h: 30, minW: 40, minH: 20),
 ];
-
 ```
-### Initialise the ZeusGrid
+
+### 2. Initialize the ZeusGrid
 
 ```dart
-Switch(
-  value: _isEditing,
-  onChanged: (v) => setState(() => _isEditing = v),
-  activeColor: Colors.greenAccent,
-),
 ZeusGrid(
-	isEditing: _isEditMode,
-	modules: myModules,
-	onGenerateContent: (id) => MyModuleWidget(id),
-	onModuleUpdate: (m) => setState(() => sync(m)),
-	onModuleRemove: (id) => setState(() => remove(id)),
+  isEditing: _isEditMode,
+  cellSide: 10.0, // 🎯 1 unit = 10 physical pixels
+  modules: myModules,
+  unplacedModules: myArsenal,
+  onGenerateContent: (id) => MyModuleWidget(id),
+  onModuleUpdate: (m) => setState(() => updateSourceOfTruth(m)),
+  onModuleRemove: (id) => setState(() => removeFromGrid(id)),
 );
 ```
 
-## Parameters
+## Customization
 
-### Styling (Optional)
-
-Styling has been made simple by defining gridStyle, moduleStyle, menuStyle in ZeusGrid().
+### Styling
+Customize the look and feel of your dashboard using dedicated style objects.
 
 ```dart
 ZeusGrid(
-	gridStyle: GridStyle(lineColor: Colors.blueGrey.withOpacity(0.1)),
-	moduleStyle: ModuleStyle(borderRadius: BorderRadius.circular(12), color: Colors.black),
-	menuStyle: menuStyle: MenuStyle(width: 250, backgroundColor: Colors.black87),
-)
+  gridStyle: GridStyle(
+    backgroundColor: Color(0xFF080808),
+    lineColor: Colors.white.withAlpha(15),
+    majorLineColor: Colors.white.withAlpha(35),
+    majorInterval: 10, // Brighter line every 10 units
+  ),
+  moduleStyle: ModuleStyle(
+    color: Color(0xFF0A0A0A),
+    borderRadius: BorderRadius.circular(4),
+    activeBorderColor: Colors.cyanAccent,
+  ),
+);
 ```
 
-### Handling State & Persistence
+## Extending ZeusGrid
 
-ZeusGrid follows a Unidirectional Data Flow pattern. The widget does not manage its own internal list of modules. Instead, it notifies the parent application when a user interacts with a module, allowing you to sync changes to a database, a state provider (Riverpod/Bloc), or local storage.
+### Unidirectional Data Flow
+ZeusGrid follows a strict state-driven pattern. It does not manage its own internal list of modules. Instead, it notifies your application of changes, allowing you to integrate with any state management solution (Riverpod, Bloc, Provider) or sync directly to a database.
 
+#### `onModuleUpdate(ZeusModule module)`
+Fires whenever a module is moved or resized. Use this to update your backend or local state.
 
-#### onModuleUpdate(ZeusModule module)
+#### `onModuleRemove(String id)`
+Fires when a module is closed or dragged into the Arsenal. Use this to move the module ID from your "active" list back to your "unplaced" list.
 
-This callback fires whenever a module is moved or resized and the user releases their finger/mouse.
+## Why ZeusGrid?
+Dashboard packages often struggle with "layout reflow" which can be disorienting in high-stakes monitoring environments. ZeusGrid was built to solve this by providing a **fixed tactical map** where data is always exactly where you left it.
 
-The Payload: Returns a new ZeusModule instance with updated x, y, w, h coordinates.
-
-Usage: Use this to update your "Single Source of Truth."
-
-Example:
-
-```dart
- onModuleUpdate: (m) => setState(() {
-	 final fromArsenalIndex = myArsenal.indexWhere(
-	   (item) => item.id == m.id,
-	 );
-
-	if (fromArsenalIndex != -1) {
-	  myArsenal.removeAt(fromArsenalIndex);
-	  myModules.add(m);
-	} else {
-	   final i = myModules.indexWhere((item) => item.id == m.id);
-	   if (i != -1) myModules[i] = m;
-	}
-}),
-```
-
-#### onModuleRemove(String id)
-
-This callback fires when the user taps the Red Close Button on a module in Edit Mode.
-
-The Payload: Returns the unique String id of the module to be removed.
-
-Usage: Use this to move a module from your "Active" list back to your "Arsenal" (unplaced) list.
-
-Example:
-
-```dart
-onModuleRemove: (id) => setState(() {
-  // 🎯 MOVE: Grid -> Arsenal
-  final removedIndex = myModules.indexWhere((m) => m.id == id);
-  if (removedIndex != -1) {
-    final removedModule = myModules.removeAt(removedIndex);
-    myArsenal.add(removedModule);
-  }
-}),
-```
-
-## Why this Architecture?
-
-By exposing these callbacks, the package remains highly portable.
-
-
-Persistence: You can easily hook this up to Shared Preferences or Firebase so your layout persists across app restarts.
-
-Validation: You can prevent certain modules from being moved or deleted based on user permissions (e.g., "Guest" users can't delete the Server Status card).
-
-Global Sync: In a multi-user environment, you can broadcast the onModuleUpdate via WebSockets so the dashboard moves in real-time for everyone.
-
-
-## Additional
-This is intently built for a personal project and i saw the other dashboard packages didn't quite give me what i was looking for so i made my own, thought i would share that with everyone. Feel free to improve on it and let me know any improvements can be made :)
-  
+---
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/savisaar2d)
