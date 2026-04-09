@@ -33,7 +33,6 @@ class ZeusGrid extends StatefulWidget {
   State<ZeusGrid> createState() => _ZeusGridState();
 }
 
-const double _kPadding = 0.0;
 const double _kHandleLength = 15.0;
 const double _kHandleThickness = 2.0;
 const double _kHitAreaSize = 40.0;
@@ -235,6 +234,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -243,6 +244,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -251,6 +254,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -259,6 +264,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -267,6 +274,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: _kHandleInset,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -275,6 +284,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: physicalH - _kHandleInset - _kHandleThickness,
                 width: hLen,
                 height: _kHandleThickness,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -283,6 +294,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
                 height: hLen,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               _buildResizeHandle(
                 m,
@@ -291,6 +304,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                 top: physicalH / 2 - (hLen / 2),
                 width: _kHandleThickness,
                 height: hLen,
+                hitWidth: hitS,
+                hitHeight: hitS,
               ),
               Positioned(
                 left: 10,
@@ -337,8 +352,8 @@ class _ZeusGridState extends State<ZeusGrid> {
     final hHeight = hitHeight ?? _kHitAreaSize;
 
     // Center hit area over visual bars
-    final hLeft = hitLeft ?? (left != null ? left! - (hWidth - (width ?? 0)) / 2 : (right != null ? right! - hWidth : 0));
-    final hTop = hitTop ?? (top != null ? top! - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom! - hHeight : 0));
+    final hLeft = hitLeft ?? (left != null ? left - (hWidth - (width ?? 0)) / 2 : (right != null ? right - hWidth : 0));
+    final hTop = hitTop ?? (top != null ? top - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom - hHeight : 0));
 
     return Stack(
       clipBehavior: Clip.none,
@@ -367,7 +382,7 @@ class _ZeusGridState extends State<ZeusGrid> {
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + (width! - height!),
+            left: left != null ? left + (width! - height!) : null,
             top: top,
             width: height,
             height: width,
@@ -382,8 +397,8 @@ class _ZeusGridState extends State<ZeusGrid> {
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
           ),
           Positioned(
-            left: left! + (width! - height!),
-            top: top! - (width! - height!),
+            left: left != null ? left + (width! - height!) : null,
+            top: top != null ? top - (width! - height!) : null,
             width: height,
             height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
@@ -398,7 +413,7 @@ class _ZeusGridState extends State<ZeusGrid> {
           ),
           Positioned(
             left: left,
-            top: top! - (width! - height!),
+            top: top != null ? top - (width! - height!) : null,
             width: height,
             height: width,
             child: Container(color: Colors.white.withValues(alpha: 0.8)),
@@ -660,8 +675,6 @@ class _ZeusGridState extends State<ZeusGrid> {
           rows - s.initialY,
         ).toInt();
         p = p.copyWith(x: newX, w: s.initialX + s.initialW - newX, h: newH);
-        break;
-      default:
         break;
     }
 
