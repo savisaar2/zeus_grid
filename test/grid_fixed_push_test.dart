@@ -20,7 +20,6 @@ void main() {
             modules: modules,
             unplacedModules: const [],
             isEditing: true,
-            useFixedGrid: true,
             cellSide: 10.0,
             onGenerateContent: (id) => Container(key: Key('content_$id')),
             onModuleUpdate: (m) {
@@ -63,7 +62,6 @@ void main() {
             modules: modules,
             unplacedModules: const [],
             isEditing: true,
-            useFixedGrid: true,
             cellSide: 10.0,
             onGenerateContent: (id) => Container(key: Key('content_$id')),
             onModuleUpdate: (m) {

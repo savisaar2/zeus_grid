@@ -111,11 +111,11 @@ class GridStyle {
 
   const GridStyle({
     this.backgroundColor = const Color(0xFF080808),
-    this.lineColor = const Color.fromARGB(25, 255, 255, 255),
-    this.majorLineColor = const Color.fromARGB(60, 255, 255, 255),
+    this.lineColor = const Color.fromARGB(15, 255, 255, 255),
+    this.majorLineColor = const Color.fromARGB(35, 255, 255, 255),
     this.lineWidth = 1.0,
     this.majorLineWidth = 1.0,
-    this.minorInterval = 2,
+    this.minorInterval = 1,
     this.majorInterval = 10,
     this.showGrid = true,
   });

@@ -4,6 +4,8 @@ import 'package:zeus_grid/zeus_grid.dart';
 void main() {
   group('Grid Boundary & Clamping Tests', () {
     const module = ZeusModule(id: 'test', x: 5, y: 5, w: 10, h: 10);
+    // In fixed grid, maxCols/Rows are dynamic based on viewport.
+    // Clamping during updateSession uses these dynamic values.
     const maxCols = 120;
     const maxRows = 100;
 
@@ -19,7 +21,6 @@ void main() {
     });
 
     test('Module should not move past the Right/Bottom boundaries', () {
-      // Simulating a drag beyond the 120x100 grid
       final updated = module.copyWith(
         x: (150).clamp(0, maxCols - module.w),
         y: (150).clamp(0, maxRows - module.h),

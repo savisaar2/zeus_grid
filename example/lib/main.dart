@@ -11,17 +11,17 @@ class ZeusTestBench extends StatefulWidget {
 }
 
 class _ZeusTestBenchState extends State<ZeusTestBench> {
-  bool _isEditing = false;
+  bool _isEditing = true;
 
   // 1. Modules currently displayed on the grid
   List<ZeusModule> myModules = [
-    ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30, minW: 20, minH: 15),
+    const ZeusModule(id: 'module_a', x: 10, y: 10, w: 40, h: 30, minW: 20, minH: 15),
   ];
 
   // 2. Modules waiting in the "Arsenal" side menu
   List<ZeusModule> myArsenal = [
-    ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30, minW: 40, minH: 20),
-    ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20, minW: 10, minH: 10),
+    const ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30, minW: 40, minH: 20),
+    const ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20, minW: 10, minH: 10),
   ];
 
   @override
@@ -31,22 +31,28 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
       appBar: AppBar(
         title: const Text(
           "ZEUS // ENGINE_TEST",
-          style: TextStyle(fontFamily: 'monospace'),
+          style: TextStyle(fontFamily: 'monospace', fontSize: 14),
         ),
         backgroundColor: Colors.black,
         actions: [
-          const Center(child: Text("EDIT", style: TextStyle(fontSize: 12))),
-          Switch(
-            value: _isEditing,
-            onChanged: (v) => setState(() => _isEditing = v),
-            activeColor: Colors.greenAccent,
+          Row(
+            children: [
+              const Text("EDIT", style: TextStyle(fontSize: 10, color: Colors.white70)),
+              Switch(
+                value: _isEditing,
+                onChanged: (v) => setState(() => _isEditing = v),
+                activeColor: Colors.greenAccent,
+              ),
+            ],
           ),
+          const SizedBox(width: 10),
         ],
       ),
       body: ZeusGrid(
         isEditing: _isEditing,
+        cellSide: 10.0, // Fixed grid size
         modules: myModules,
-        unplacedModules: myArsenal, // 🎯 Pass the arsenal list here
+        unplacedModules: myArsenal, 
         onGenerateContent: (id) => Container(
           color: Colors.blueGrey.withOpacity(0.1),
           child: Center(
@@ -58,24 +64,17 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
         ),
 
         onModuleUpdate: (m) => setState(() {
-          // Check if this module is coming from the Arsenal
-          final fromArsenalIndex = myArsenal.indexWhere(
-            (item) => item.id == m.id,
-          );
-
+          final fromArsenalIndex = myArsenal.indexWhere((item) => item.id == m.id);
           if (fromArsenalIndex != -1) {
-            // 🎯 MOVE: Arsenal -> Grid
             myArsenal.removeAt(fromArsenalIndex);
             myModules.add(m);
           } else {
-            // 🎯 UPDATE: Existing Grid Position/Size
             final i = myModules.indexWhere((item) => item.id == m.id);
             if (i != -1) myModules[i] = m;
           }
         }),
 
         onModuleRemove: (id) => setState(() {
-          // 🎯 MOVE: Grid -> Arsenal
           final removedIndex = myModules.indexWhere((m) => m.id == id);
           if (removedIndex != -1) {
             final removedModule = myModules.removeAt(removedIndex);
