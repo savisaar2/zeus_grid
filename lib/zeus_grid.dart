@@ -14,6 +14,8 @@ class ZeusGrid extends StatefulWidget {
   final GridStyle gridStyle;
   final ModuleStyle moduleStyle;
   final ZeusMenuStyle menuStyle;
+  final bool useFixedGrid;
+  final double cellSide;
 
   const ZeusGrid({
     super.key,
@@ -28,6 +30,8 @@ class ZeusGrid extends StatefulWidget {
     this.gridStyle = const GridStyle(),
     this.moduleStyle = const ModuleStyle(),
     this.menuStyle = const ZeusMenuStyle(),
+    this.useFixedGrid = false,
+    this.cellSide = 10.0,
   });
 
   @override
@@ -45,13 +49,32 @@ class _ZeusGridState extends State<ZeusGrid> {
   final ValueNotifier<ZeusSession?> _activeSession = ValueNotifier(null);
   String? _focusedModuleId;
   Offset? _lastMousePosition;
+  Size? _lastSize;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cellW = constraints.maxWidth / widget.columns;
-        final cellH = constraints.maxHeight / widget.rows;
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        
+        if (widget.useFixedGrid && _lastSize != null && _lastSize != size) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _pushModulesIntoBounds(size);
+          });
+        }
+        _lastSize = size;
+
+        final cellW = widget.useFixedGrid ? widget.cellSide : constraints.maxWidth / widget.columns;
+        final cellH = widget.useFixedGrid ? widget.cellSide : constraints.maxHeight / widget.rows;
+        
+        final cols = widget.useFixedGrid ? (constraints.maxWidth / widget.cellSide).floor() : widget.columns;
+        final rows = widget.useFixedGrid ? (constraints.maxHeight / widget.cellSide).floor() : widget.rows;
 
         return Listener(
           behavior: HitTestBehavior.translucent,
@@ -61,7 +84,7 @@ class _ZeusGridState extends State<ZeusGrid> {
           child: Stack(
             children: [
               Container(color: widget.gridStyle.backgroundColor),
-              _buildVirtualGrid(cellW, cellH),
+              _buildVirtualGrid(cellW, cellH, cols, rows),
               _buildArsenalDrawer(widget.isEditing, cellW, cellH),
             ],
           ),
@@ -70,7 +93,31 @@ class _ZeusGridState extends State<ZeusGrid> {
     );
   }
 
-  Widget _buildVirtualGrid(double cellW, double cellH) {
+  void _pushModulesIntoBounds(Size size) {
+    final cols = (size.width / widget.cellSide).floor();
+    final rows = (size.height / widget.cellSide).floor();
+
+    for (var m in widget.modules) {
+      int newX = m.x;
+      int newY = m.y;
+      bool pushed = false;
+
+      if (m.x + m.w > cols) {
+        newX = (cols - m.w).clamp(0, cols);
+        pushed = true;
+      }
+      if (m.y + m.h > rows) {
+        newY = (rows - m.h).clamp(0, rows);
+        pushed = true;
+      }
+
+      if (pushed) {
+        widget.onModuleUpdate(m.copyWith(x: newX, y: newY));
+      }
+    }
+  }
+
+  Widget _buildVirtualGrid(double cellW, double cellH, int cols, int rows) {
     return ValueListenableBuilder<ZeusSession?>(
       valueListenable: _activeSession,
       builder: (context, session, _) {
@@ -101,12 +148,12 @@ class _ZeusGridState extends State<ZeusGrid> {
                       style: widget.gridStyle,
                       cellW: cellW,
                       cellH: cellH,
-                      rows: widget.rows,
-                      cols: widget.columns,
+                      rows: rows,
+                      cols: cols,
                     ),
                   ),
                 ),
-              ...list.map((m) => _buildModuleWrapper(m, session, cellW, cellH)),
+              ...list.map((m) => _buildModuleWrapper(m, session, cellW, cellH, cols, rows)),
             ],
           ),
         );
@@ -119,6 +166,8 @@ class _ZeusGridState extends State<ZeusGrid> {
     ZeusSession? session,
     double cellW,
     double cellH,
+    int gridCols,
+    int gridRows,
   ) {
     final isActive = session?.id == m.id;
     final isFocused = widget.isEditing && _focusedModuleId == m.id;
@@ -493,8 +542,12 @@ class _ZeusGridState extends State<ZeusGrid> {
     final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
 
-    final cellW = rb.size.width / widget.columns;
-    final cellH = rb.size.height / widget.rows;
+    final cellW = widget.useFixedGrid ? widget.cellSide : rb.size.width / widget.columns;
+    final cellH = widget.useFixedGrid ? widget.cellSide : rb.size.height / widget.rows;
+    
+    final cols = widget.useFixedGrid ? (rb.size.width / widget.cellSide).floor() : widget.columns;
+    final rows = widget.useFixedGrid ? (rb.size.height / widget.cellSide).floor() : widget.rows;
+
     final local = rb.globalToLocal(e.position);
     _lastMousePosition = local;
 
@@ -519,15 +572,15 @@ class _ZeusGridState extends State<ZeusGrid> {
       case ZeusHandle.move:
         final t = local - s.anchor;
         p = s.preview.copyWith(
-          x: (t.dx / cellW).round().clamp(0, widget.columns - s.preview.w),
-          y: (t.dy / cellH).round().clamp(0, widget.rows - s.preview.h),
+          x: (t.dx / cellW).round().clamp(0, cols - s.preview.w),
+          y: (t.dy / cellH).round().clamp(0, rows - s.preview.h),
         );
         break;
       case ZeusHandle.right:
         final int deltaX = gridX - s.initialGridX;
         final int newW = (s.initialW + deltaX).clamp(
           s.preview.minW,
-          widget.columns - p.x,
+          cols - p.x,
         ).toInt();
         p = p.copyWith(w: newW);
         break;
@@ -543,7 +596,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         final int deltaY = gridY - s.initialGridY;
         final int newH = (s.initialH + deltaY).clamp(
           s.preview.minH,
-          widget.rows - s.initialY,
+          rows - s.initialY,
         ).toInt();
         p = p.copyWith(h: newH);
         break;
@@ -563,11 +616,11 @@ class _ZeusGridState extends State<ZeusGrid> {
         final int deltaY = gridY - s.initialGridY;
         final int newW = (s.initialW + deltaX).clamp(
           s.preview.minW,
-          widget.columns - s.initialX,
+          cols - s.initialX,
         ).toInt();
         final int newH = (s.initialH + deltaY).clamp(
           s.preview.minH,
-          widget.rows - s.initialY,
+          rows - s.initialY,
         ).toInt();
         p = p.copyWith(w: newW, h: newH);
         break;
@@ -576,7 +629,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         final int deltaY = gridY - s.initialGridY;
         final int newW = (s.initialW + deltaX).clamp(
           s.preview.minW,
-          widget.columns - s.initialX,
+          cols - s.initialX,
         ).toInt();
         final int newY = (s.initialY + deltaY).clamp(
           0,
@@ -611,7 +664,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         ).toInt();
         final int newH = (s.initialH + deltaY).clamp(
           s.preview.minH,
-          widget.rows - s.initialY,
+          rows - s.initialY,
         ).toInt();
         p = p.copyWith(x: newX, w: s.initialX + s.initialW - newX, h: newH);
         break;
@@ -654,8 +707,9 @@ class _ZeusGridState extends State<ZeusGrid> {
 
     if (rb != null && localMouse != null) {
       final module = s.preview;
-      final cellW = rb.size.width / widget.columns;
-      final cellH = rb.size.height / widget.rows;
+      
+      final cellW = widget.useFixedGrid ? widget.cellSide : rb.size.width / widget.columns;
+      final cellH = widget.useFixedGrid ? widget.cellSide : rb.size.height / widget.rows;
 
       final left = module.x * cellW;
       final top = module.y * cellH;
