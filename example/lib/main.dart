@@ -15,13 +15,13 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
 
   // 1. Modules currently displayed on the grid
   List<ZeusModule> myModules = [
-    ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30),
+    ZeusModule(id: 'module_a', x: 0, y: 0, w: 40, h: 30, minW: 20, minH: 15),
   ];
 
   // 2. Modules waiting in the "Arsenal" side menu
   List<ZeusModule> myArsenal = [
-    ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30),
-    ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20),
+    ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30, minW: 40, minH: 20),
+    ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20, minW: 10, minH: 10),
   ];
 
   @override

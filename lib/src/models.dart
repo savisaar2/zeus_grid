@@ -7,6 +7,8 @@ class ZeusModule {
   final int y;
   final int w;
   final int h;
+  final int minW;
+  final int minH;
 
   const ZeusModule({
     required this.id,
@@ -14,16 +16,20 @@ class ZeusModule {
     required this.y,
     required this.w,
     required this.h,
+    this.minW = 1,
+    this.minH = 1,
   });
 
   // 🎯 The "Professional" way to update models in Flutter
-  ZeusModule copyWith({int? x, int? y, int? w, int? h}) {
+  ZeusModule copyWith({int? x, int? y, int? w, int? h, int? minW, int? minH}) {
     return ZeusModule(
       id: id,
       x: x ?? this.x,
       y: y ?? this.y,
       w: w ?? this.w,
       h: h ?? this.h,
+      minW: minW ?? this.minW,
+      minH: minH ?? this.minH,
     );
   }
 
@@ -31,7 +37,7 @@ class ZeusModule {
   ZeusModule copy() => copyWith();
 }
 
-enum HandleType {
+enum ZeusHandle {
   move,
   top,
   bottom,
@@ -47,10 +53,16 @@ class ZeusSession {
   final String id;
   final ZeusModule preview;
   final Offset anchor;
-  final HandleType handle;
+  final ZeusHandle handle;
   final bool isValid;
   final bool isFromDrawer;
   final bool isOverGrid;
+  final int initialGridX;
+  final int initialGridY;
+  final int initialW;
+  final int initialH;
+  final int initialX;
+  final int initialY;
 
   const ZeusSession({
     required this.id,
@@ -60,7 +72,31 @@ class ZeusSession {
     this.isValid = true,
     this.isFromDrawer = false,
     this.isOverGrid = false,
+    this.initialGridX = 0,
+    this.initialGridY = 0,
+    this.initialW = 0,
+    this.initialH = 0,
+    this.initialX = 0,
+    this.initialY = 0,
   });
+
+  ZeusSession copyWith({ZeusModule? preview, bool? isOverGrid, bool? isValid}) {
+    return ZeusSession(
+      id: id,
+      preview: preview ?? this.preview,
+      anchor: anchor,
+      handle: handle,
+      isFromDrawer: isFromDrawer,
+      isOverGrid: isOverGrid ?? this.isOverGrid,
+      isValid: isValid ?? this.isValid,
+      initialGridX: initialGridX,
+      initialGridY: initialGridY,
+      initialW: initialW,
+      initialH: initialH,
+      initialX: initialX,
+      initialY: initialY,
+    );
+  }
 }
 
 class GridStyle {
