@@ -41,6 +41,7 @@ const double _kHandleInset = 10.0;
 class _ZeusGridState extends State<ZeusGrid> {
   final GlobalKey _gridKey = GlobalKey();
   final ValueNotifier<ZeusSession?> _activeSession = ValueNotifier(null);
+  final ValueNotifier<String?> _activeSessionId = ValueNotifier(null);
   String? _focusedModuleId;
   Offset? _lastMousePosition;
   Size? _lastSize;
@@ -69,7 +70,10 @@ class _ZeusGridState extends State<ZeusGrid> {
           behavior: HitTestBehavior.translucent,
           onPointerMove: _updateSession,
           onPointerUp: (_) => _endSession(),
-          onPointerCancel: (_) => _activeSession.value = null,
+          onPointerCancel: (_) {
+            _activeSession.value = null;
+            _activeSessionId.value = null;
+          },
           child: Stack(
             children: [
               Container(color: widget.gridStyle.backgroundColor),
@@ -107,46 +111,57 @@ class _ZeusGridState extends State<ZeusGrid> {
   }
 
   Widget _buildVirtualGrid(double cellW, double cellH, int cols, int rows) {
-    return ValueListenableBuilder<ZeusSession?>(
-      valueListenable: _activeSession,
-      builder: (context, session, _) {
-        final List<ZeusModule> list = List.from(widget.modules);
+    return SizedBox.expand(
+      child: Stack(
+        key: _gridKey,
+        clipBehavior: Clip.none,
+        children: [
+          // Layer 1: Static Grid & Background Modules
+          ValueListenableBuilder<String?>(
+            valueListenable: _activeSessionId,
+            builder: (context, activeId, _) {
+              final List<ZeusModule> staticModules =
+                  widget.modules.where((m) => m.id != activeId).toList();
 
-        if (session != null) {
-          if (session.isFromDrawer && session.isOverGrid) {
-            list.add(session.preview);
-          } else if (!session.isFromDrawer) {
-            final idx = list.indexWhere((m) => m.id == session.id);
-            if (idx != -1) list[idx] = session.preview;
-          }
-        }
+              // Sort to ensure focused module is on top of other static modules
+              staticModules.sort(
+                (a, b) => (a.id == _focusedModuleId) ? 1 : -1,
+              );
 
-        list.sort(
-          (a, b) => (a.id == session?.id || a.id == _focusedModuleId) ? 1 : -1,
-        );
-
-        return SizedBox.expand(
-          child: Stack(
-            key: _gridKey,
-            clipBehavior: Clip.none,
-            children: [
-              if (widget.isEditing)
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: GridPainter(
-                      style: widget.gridStyle,
-                      cellW: cellW,
-                      cellH: cellH,
-                      rows: rows,
-                      cols: cols,
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  if (widget.isEditing)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: GridPainter(
+                          style: widget.gridStyle,
+                          cellW: cellW,
+                          cellH: cellH,
+                          rows: rows,
+                          cols: cols,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ...list.map((m) => _buildModuleWrapper(m, session, cellW, cellH, cols, rows)),
-            ],
+                  ...staticModules.map((m) =>
+                      _buildModuleWrapper(m, null, cellW, cellH, cols, rows)),
+                ],
+              );
+            },
           ),
-        );
-      },
+          // Layer 2: Dynamic Active Module
+          ValueListenableBuilder<ZeusSession?>(
+            valueListenable: _activeSession,
+            builder: (context, session, _) {
+              if (session == null || !session.isOverGrid) {
+                return const SizedBox.shrink();
+              }
+              return _buildModuleWrapper(
+                  session.preview, session, cellW, cellH, cols, rows);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -540,6 +555,7 @@ class _ZeusGridState extends State<ZeusGrid> {
       initialX: m.x,
       initialY: m.y,
     );
+    _activeSessionId.value = m.id;
     _focusedModuleId = m.id;
     _lastMousePosition = rb.globalToLocal(e.position);
   }
@@ -710,6 +726,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     }
 
     _activeSession.value = null;
+    _activeSessionId.value = null;
 
     if (rb != null && localMouse != null) {
       final module = s.preview;
