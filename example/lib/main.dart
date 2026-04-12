@@ -50,6 +50,7 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
       ),
       body: ZeusGrid(
         isEditing: _isEditing,
+        autoPack: true,
         cellSide: 10.0, // Fixed grid size
         modules: myModules,
         unplacedModules: myArsenal, 

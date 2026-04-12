@@ -14,6 +14,7 @@ class ZeusGrid extends StatefulWidget {
   final ModuleStyle moduleStyle;
   final ZeusMenuStyle menuStyle;
   final double cellSide;
+  final bool autoPack;
 
   const ZeusGrid({
     super.key,
@@ -27,6 +28,7 @@ class ZeusGrid extends StatefulWidget {
     this.moduleStyle = const ModuleStyle(),
     this.menuStyle = const ZeusMenuStyle(),
     this.cellSide = 10.0,
+    this.autoPack = false,
   });
 
   @override
@@ -42,6 +44,7 @@ class _ZeusGridState extends State<ZeusGrid> {
   final GlobalKey _gridKey = GlobalKey();
   final ValueNotifier<ZeusSession?> _activeSession = ValueNotifier(null);
   final ValueNotifier<String?> _activeSessionId = ValueNotifier(null);
+  final ValueNotifier<List<ZeusModule>?> _packedModules = ValueNotifier(null);
   String? _focusedModuleId;
   Offset? _lastMousePosition;
   Size? _lastSize;
@@ -73,6 +76,7 @@ class _ZeusGridState extends State<ZeusGrid> {
           onPointerCancel: (_) {
             _activeSession.value = null;
             _activeSessionId.value = null;
+            _packedModules.value = null;
           },
           child: Stack(
             children: [
@@ -120,32 +124,39 @@ class _ZeusGridState extends State<ZeusGrid> {
           ValueListenableBuilder<String?>(
             valueListenable: _activeSessionId,
             builder: (context, activeId, _) {
-              final List<ZeusModule> staticModules =
-                  widget.modules.where((m) => m.id != activeId).toList();
+              return ValueListenableBuilder<List<ZeusModule>?>(
+                valueListenable: _packedModules,
+                builder: (context, packed, _) {
+                  final List<ZeusModule> baseList =
+                      packed ?? widget.modules;
+                  final List<ZeusModule> staticModules =
+                      baseList.where((m) => m.id != activeId).toList();
 
-              // Sort to ensure focused module is on top of other static modules
-              staticModules.sort(
-                (a, b) => (a.id == _focusedModuleId) ? 1 : -1,
-              );
+                  // Sort to ensure focused module is on top of other static modules
+                  staticModules.sort(
+                    (a, b) => (a.id == _focusedModuleId) ? 1 : -1,
+                  );
 
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  if (widget.isEditing)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: GridPainter(
-                          style: widget.gridStyle,
-                          cellW: cellW,
-                          cellH: cellH,
-                          rows: rows,
-                          cols: cols,
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (widget.isEditing)
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: GridPainter(
+                              style: widget.gridStyle,
+                              cellW: cellW,
+                              cellH: cellH,
+                              rows: rows,
+                              cols: cols,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ...staticModules.map((m) =>
-                      _buildModuleWrapper(m, null, cellW, cellH, cols, rows)),
-                ],
+                      ...staticModules.map((m) => _buildModuleWrapper(
+                          m, null, cellW, cellH, cols, rows)),
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -804,6 +815,12 @@ class _ZeusGridState extends State<ZeusGrid> {
         break;
     }
 
+    if (p.x != s.preview.x || p.y != s.preview.y || p.w != s.preview.w || p.h != s.preview.h) {
+      if (widget.autoPack) {
+        _calculatePacking(p);
+      }
+    }
+
     _activeSession.value = s.copyWith(
       preview: p,
       isOverGrid: overGrid,
@@ -834,11 +851,21 @@ class _ZeusGridState extends State<ZeusGrid> {
     if (!s.isFromDrawer && !s.isOverGrid && hasMovedSignificantly) {
       widget.onModuleRemove(s.id);
     } else if (s.isValid && s.isOverGrid) {
+      if (widget.autoPack && _packedModules.value != null) {
+        // Find modules that moved during auto-packing and update them
+        for (var m in _packedModules.value!) {
+          final original = widget.modules.firstWhere((o) => o.id == m.id);
+          if (m.x != original.x || m.y != original.y || m.w != original.w || m.h != original.h) {
+            widget.onModuleUpdate(m);
+          }
+        }
+      }
       widget.onModuleUpdate(s.preview);
     }
 
     _activeSession.value = null;
     _activeSessionId.value = null;
+    _packedModules.value = null;
 
     if (rb != null && localMouse != null) {
       final module = s.preview;
@@ -862,16 +889,56 @@ class _ZeusGridState extends State<ZeusGrid> {
   }
 
   bool _collision(ZeusModule t) {
+    if (widget.autoPack) return false; // In autoPack mode, we clear space.
     for (var o in widget.modules) {
       if (o.id == t.id) continue;
-      if (t.x < (o.x + o.w) &&
-          (t.x + t.w) > o.x &&
-          t.y < (o.y + o.h) &&
-          (t.y + t.h) > o.y) {
+      if (_checkCollisionBetween(t, o)) {
         return true;
       }
     }
     return false;
+  }
+
+  bool _checkCollisionBetween(ZeusModule a, ZeusModule b) {
+    return a.x < (b.x + b.w) &&
+        (a.x + a.w) > b.x &&
+        a.y < (b.y + b.h) &&
+        (a.y + a.h) > b.y;
+  }
+
+  void _calculatePacking(ZeusModule active) {
+    if (!widget.autoPack) return;
+
+    final others = widget.modules.where((m) => m.id != active.id).toList();
+    List<ZeusModule> packed = others.map((e) => e.copy()).toList();
+
+    bool changed = true;
+    int iterations = 0;
+    while (changed && iterations < 100) {
+      changed = false;
+      iterations++;
+
+      for (int i = 0; i < packed.length; i++) {
+        var m = packed[i];
+        if (_checkCollisionBetween(active, m)) {
+          packed[i] = m.copyWith(y: active.y + active.h);
+          changed = true;
+        }
+
+        for (int j = 0; j < packed.length; j++) {
+          if (i == j) continue;
+          if (_checkCollisionBetween(packed[i], packed[j])) {
+            if (packed[i].y >= packed[j].y) {
+              packed[i] = packed[i].copyWith(y: packed[j].y + packed[j].h);
+            } else {
+              packed[j] = packed[j].copyWith(y: packed[i].y + packed[i].h);
+            }
+            changed = true;
+          }
+        }
+      }
+    }
+    _packedModules.value = packed;
   }
 
   Widget _buildArsenalDrawer(bool visible, double cellW, double cellH) {
