@@ -1,6 +1,6 @@
 name: zeus_grid
 description: "A high-performance, tactical grid engine for Flutter. Featuring an immutable state-driven drag-and-resize system with built-in collision detection."
-version: 0.9.0
+version: 1.0.0
 homepage: https://github.com/savisaar2/zeus_grid
 
 environment:
