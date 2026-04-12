@@ -528,7 +528,9 @@ class _ZeusGridState extends State<ZeusGrid> {
 
     return Opacity(
       opacity: isActive ? widget.moduleStyle.activeOpacity : 1.0,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
         decoration: BoxDecoration(
           color: bgColor,
           border: Border.all(
@@ -536,6 +538,9 @@ class _ZeusGridState extends State<ZeusGrid> {
             width: (isFocused || isActive) ? 2.0 : 1.0,
           ),
           borderRadius: widget.moduleStyle.borderRadius,
+          boxShadow: isActive
+              ? widget.moduleStyle.activeShadow
+              : widget.moduleStyle.baseShadow,
         ),
         child: ClipRRect(
           borderRadius: widget.moduleStyle.borderRadius,

@@ -141,6 +141,8 @@ class ModuleStyle {
   final double elevation;
   final double activeOpacity;
   final double borderWidth; // 🎯 Added for extra customization
+  final List<BoxShadow>? baseShadow;
+  final List<BoxShadow>? activeShadow;
 
   const ModuleStyle({
     this.color = const Color(0xFF0A0A0A),
@@ -150,6 +152,14 @@ class ModuleStyle {
     this.elevation = 2.0,
     this.activeOpacity = 0.8,
     this.borderWidth = 1.0,
+    this.baseShadow,
+    this.activeShadow = const [
+      BoxShadow(
+        color: Color(0x3300FFFF),
+        blurRadius: 15,
+        spreadRadius: 2,
+      )
+    ],
   });
 }
 
