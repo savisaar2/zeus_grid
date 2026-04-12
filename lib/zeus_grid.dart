@@ -227,6 +227,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         : _kHitAreaSize;
 
     return AnimatedPositioned(
+      key: ValueKey('module_${m.id}'),
       duration: (session != null) ? Duration.zero : const Duration(milliseconds: 150),
       curve: Curves.easeOut,
       left: x,
@@ -815,16 +816,17 @@ class _ZeusGridState extends State<ZeusGrid> {
         break;
     }
 
+    bool packingValid = s.isValid;
     if (p.x != s.preview.x || p.y != s.preview.y || p.w != s.preview.w || p.h != s.preview.h) {
       if (widget.autoPack) {
-        _calculatePacking(p);
+        packingValid = _calculatePacking(p, rows);
       }
     }
 
     _activeSession.value = s.copyWith(
       preview: p,
       isOverGrid: overGrid,
-      isValid: !_collision(p),
+      isValid: packingValid && !_collision(p),
       visualPosition: vPos,
       visualSize: vSize,
     );
@@ -906,8 +908,8 @@ class _ZeusGridState extends State<ZeusGrid> {
         (a.y + a.h) > b.y;
   }
 
-  void _calculatePacking(ZeusModule active) {
-    if (!widget.autoPack) return;
+  bool _calculatePacking(ZeusModule active, int maxRows) {
+    if (!widget.autoPack) return true;
 
     final others = widget.modules.where((m) => m.id != active.id).toList();
     List<ZeusModule> packed = others.map((e) => e.copy()).toList();
@@ -921,7 +923,9 @@ class _ZeusGridState extends State<ZeusGrid> {
       for (int i = 0; i < packed.length; i++) {
         var m = packed[i];
         if (_checkCollisionBetween(active, m)) {
-          packed[i] = m.copyWith(y: active.y + active.h);
+          final newY = active.y + active.h;
+          if (newY + m.h > maxRows) return false; // Boundary violation
+          packed[i] = m.copyWith(y: newY);
           changed = true;
         }
 
@@ -929,9 +933,13 @@ class _ZeusGridState extends State<ZeusGrid> {
           if (i == j) continue;
           if (_checkCollisionBetween(packed[i], packed[j])) {
             if (packed[i].y >= packed[j].y) {
-              packed[i] = packed[i].copyWith(y: packed[j].y + packed[j].h);
+              final newY = packed[j].y + packed[j].h;
+              if (newY + packed[i].h > maxRows) return false; // Boundary violation
+              packed[i] = packed[i].copyWith(y: newY);
             } else {
-              packed[j] = packed[j].copyWith(y: packed[i].y + packed[i].h);
+              final newY = packed[i].y + packed[i].h;
+              if (newY + packed[j].h > maxRows) return false; // Boundary violation
+              packed[j] = packed[j].copyWith(y: newY);
             }
             changed = true;
           }
@@ -939,6 +947,7 @@ class _ZeusGridState extends State<ZeusGrid> {
       }
     }
     _packedModules.value = packed;
+    return true;
   }
 
   Widget _buildArsenalDrawer(bool visible, double cellW, double cellH) {
