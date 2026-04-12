@@ -35,6 +35,26 @@ class ZeusModule {
 
   // Legacy support for your current copy() call
   ZeusModule copy() => copyWith();
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'x': x,
+        'y': y,
+        'w': w,
+        'h': h,
+        'minW': minW,
+        'minH': minH,
+      };
+
+  factory ZeusModule.fromJson(Map<String, dynamic> json) => ZeusModule(
+        id: json['id'] as String,
+        x: json['x'] as int,
+        y: json['y'] as int,
+        w: json['w'] as int,
+        h: json['h'] as int,
+        minW: (json['minW'] ?? 1) as int,
+        minH: (json['minH'] ?? 1) as int,
+      );
 }
 
 enum ZeusHandle {
