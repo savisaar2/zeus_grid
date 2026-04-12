@@ -312,8 +312,6 @@ class _ZeusGridState extends State<ZeusGrid> {
     }
 
     ZeusModule p = s.preview;
-    final int gridX = (local.dx / cellW).floor();
-    final int gridY = (local.dy / cellH).floor();
 
     Offset vPos = s.visualPosition;
     Size vSize = s.visualSize;
@@ -976,15 +974,13 @@ class _ModuleCard extends StatelessWidget {
 class _ResizeHandle extends StatelessWidget {
   final ZeusHandle handle;
   final Function(PointerDownEvent, ZeusHandle) onStartSession;
-  final double? left, top, right, bottom, width, height, hitWidth, hitHeight;
+  final double? left, top, width, height, hitWidth, hitHeight;
 
   const _ResizeHandle({
     required this.handle,
     required this.onStartSession,
     this.left,
     this.top,
-    this.right,
-    this.bottom,
     this.width,
     this.height,
     this.hitWidth,
@@ -997,9 +993,9 @@ class _ResizeHandle extends StatelessWidget {
     final hHeight = hitHeight ?? _kHitAreaSize;
 
     final hLeft =
-        left != null ? left! - (hWidth - (width ?? 0)) / 2 : (right != null ? right! - hWidth : 0.0);
+        left != null ? left! - (hWidth - (width ?? 0)) / 2 : 0.0;
     final hTop =
-        top != null ? top! - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom! - hHeight : 0.0);
+        top != null ? top! - (hHeight - (height ?? 0)) / 2 : 0.0;
 
     return Stack(
       clipBehavior: Clip.none,
