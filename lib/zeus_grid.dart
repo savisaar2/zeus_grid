@@ -156,11 +156,37 @@ class _ZeusGridState extends State<ZeusGrid> {
               if (session == null || !session.isOverGrid) {
                 return const SizedBox.shrink();
               }
-              return _buildModuleWrapper(
-                  session.preview, session, cellW, cellH, cols, rows);
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // The "Ghost" Preview (snapped)
+                  _buildGhost(session.preview, session.isValid, cellW, cellH),
+                  // The smooth Active Module
+                  _buildModuleWrapper(
+                      session.preview, session, cellW, cellH, cols, rows),
+                ],
+              );
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGhost(ZeusModule m, bool isValid, double cellW, double cellH) {
+    return Positioned(
+      left: m.x * cellW,
+      top: m.y * cellH,
+      width: m.w * cellW,
+      height: m.h * cellH,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isValid ? Colors.cyanAccent.withAlpha(100) : Colors.redAccent.withAlpha(100),
+            width: 2,
+          ),
+          borderRadius: widget.moduleStyle.borderRadius,
+        ),
       ),
     );
   }
@@ -177,13 +203,10 @@ class _ZeusGridState extends State<ZeusGrid> {
     final isFocused = widget.isEditing && _focusedModuleId == m.id;
     final isValid = isActive ? session!.isValid : true;
 
-    final x = isActive ? session!.preview.x : m.x;
-    final y = isActive ? session!.preview.y : m.y;
-    final w = isActive ? session!.preview.w : m.w;
-    final h = isActive ? session!.preview.h : m.h;
-
-    final double physicalW = (w * cellW).clamp(m.minW * cellW, double.infinity);
-    final double physicalH = (h * cellH).clamp(m.minH * cellH, double.infinity);
+    final x = isActive ? session!.visualPosition.dx : m.x * cellW;
+    final y = isActive ? session!.visualPosition.dy : m.y * cellH;
+    final double physicalW = isActive ? session!.visualSize.width : (m.w * cellW);
+    final double physicalH = isActive ? session!.visualSize.height : (m.h * cellH);
 
     final hLen = (physicalW < (_kHandleLength * 3) || physicalH < (_kHandleLength * 3))
         ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
@@ -192,9 +215,11 @@ class _ZeusGridState extends State<ZeusGrid> {
         ? (physicalW < physicalH ? physicalW / 2 : physicalH / 2)
         : _kHitAreaSize;
 
-    return Positioned(
-      left: x * cellW,
-      top: y * cellH,
+    return AnimatedPositioned(
+      duration: (session != null) ? Duration.zero : const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      left: x,
+      top: y,
       width: physicalW,
       height: physicalH,
       child: MouseRegion(
@@ -234,10 +259,10 @@ class _ZeusGridState extends State<ZeusGrid> {
                   isActive,
                   isFocused,
                   isValid,
-                  x,
-                  y,
-                  w,
-                  h,
+                  m.x,
+                  m.y,
+                  m.w,
+                  m.h,
                 ),
               ),
             ),
@@ -554,6 +579,8 @@ class _ZeusGridState extends State<ZeusGrid> {
       initialH: m.h,
       initialX: m.x,
       initialY: m.y,
+      visualPosition: Offset(m.x * cellW, m.y * cellH),
+      visualSize: Size(visualW, visualH),
     );
     _activeSessionId.value = m.id;
     _focusedModuleId = m.id;
@@ -592,105 +619,188 @@ class _ZeusGridState extends State<ZeusGrid> {
     final int gridX = (local.dx / cellW).floor();
     final int gridY = (local.dy / cellH).floor();
 
+    Offset vPos = s.visualPosition;
+    Size vSize = s.visualSize;
+
     switch (s.handle) {
       case ZeusHandle.move:
         final t = local - s.anchor;
+        vPos = t;
         p = s.preview.copyWith(
           x: (t.dx / cellW).round().clamp(0, cols - s.preview.w),
           y: (t.dy / cellH).round().clamp(0, rows - s.preview.h),
         );
         break;
       case ZeusHandle.right:
-        final int deltaX = gridX - s.initialGridX;
-        final int newW = (s.initialW + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        vSize = Size(
+          (s.initialW * cellW + deltaX).clamp(s.preview.minW * cellW, double.infinity),
+          vSize.height,
+        );
+        final int snappedW = (vSize.width / cellW).round().clamp(
           s.preview.minW,
           cols - p.x,
-        ).toInt();
-        p = p.copyWith(w: newW);
+        );
+        p = p.copyWith(w: snappedW);
         break;
       case ZeusHandle.left:
-        final int deltaX = gridX - s.initialGridX;
-        final int newX = (s.initialX + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        final double rawX = s.initialX * cellW + deltaX;
+        final double rawW = s.initialW * cellW - deltaX;
+        
+        final double minW = s.preview.minW * cellW;
+        if (rawW < minW) {
+          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
+          vSize = Size(minW, vSize.height);
+        } else {
+          vPos = Offset(rawX.clamp(0, double.infinity), vPos.dy);
+          vSize = Size(rawW, vSize.height);
+        }
+
+        final int snappedX = (vPos.dx / cellW).round().clamp(
           0,
           s.initialX + s.initialW - s.preview.minW,
-        ).toInt();
-        p = p.copyWith(x: newX, w: s.initialX + s.initialW - newX);
+        );
+        p = p.copyWith(x: snappedX, w: s.initialX + s.initialW - snappedX);
         break;
       case ZeusHandle.bottom:
-        final int deltaY = gridY - s.initialGridY;
-        final int newH = (s.initialH + deltaY).clamp(
+        final double deltaY = local.dy - s.initialGridY * cellH;
+        vSize = Size(
+          vSize.width,
+          (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, double.infinity),
+        );
+        final int snappedH = (vSize.height / cellH).round().clamp(
           s.preview.minH,
           rows - s.initialY,
-        ).toInt();
-        p = p.copyWith(h: newH);
+        );
+        p = p.copyWith(h: snappedH);
         break;
       case ZeusHandle.top:
-        final int deltaY = gridY - s.initialGridY;
-        final int newY = (s.initialY + deltaY).clamp(
+        final double deltaY = local.dy - s.initialGridY * cellH;
+        final double rawY = s.initialY * cellH + deltaY;
+        final double rawH = s.initialH * cellH - deltaY;
+
+        final double minH = s.preview.minH * cellH;
+        if (rawH < minH) {
+          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+          vSize = Size(vSize.width, minH);
+        } else {
+          vPos = Offset(vPos.dx, rawY.clamp(0, double.infinity));
+          vSize = Size(vSize.width, rawH);
+        }
+
+        final int snappedY = (vPos.dy / cellH).round().clamp(
           0,
           s.initialY + s.initialH - s.preview.minH,
-        ).toInt();
+        );
         p = p.copyWith(
-          y: newY,
-          h: s.initialY + s.initialH - newY,
+          y: snappedY,
+          h: s.initialY + s.initialH - snappedY,
         );
         break;
       case ZeusHandle.bottomRight:
-        final int deltaX = gridX - s.initialGridX;
-        final int deltaY = gridY - s.initialGridY;
-        final int newW = (s.initialW + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        final double deltaY = local.dy - s.initialGridY * cellH;
+        vSize = Size(
+          (s.initialW * cellW + deltaX).clamp(s.preview.minW * cellW, double.infinity),
+          (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, double.infinity),
+        );
+        final int snappedW = (vSize.width / cellW).round().clamp(
           s.preview.minW,
           cols - s.initialX,
-        ).toInt();
-        final int newH = (s.initialH + deltaY).clamp(
+        );
+        final int snappedH = (vSize.height / cellH).round().clamp(
           s.preview.minH,
           rows - s.initialY,
-        ).toInt();
-        p = p.copyWith(w: newW, h: newH);
+        );
+        p = p.copyWith(w: snappedW, h: snappedH);
         break;
       case ZeusHandle.topRight:
-        final int deltaX = gridX - s.initialGridX;
-        final int deltaY = gridY - s.initialGridY;
-        final int newW = (s.initialW + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        final double deltaY = local.dy - s.initialGridY * cellH;
+        
+        vSize = Size(
+          (s.initialW * cellW + deltaX).clamp(s.preview.minW * cellW, double.infinity),
+          (s.initialH * cellH - deltaY).clamp(s.preview.minH * cellH, double.infinity),
+        );
+        
+        final double minH = s.preview.minH * cellH;
+        if ((s.initialH * cellH - deltaY) < minH) {
+          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+        } else {
+          vPos = Offset(vPos.dx, (s.initialY * cellH + deltaY).clamp(0, double.infinity));
+        }
+
+        final int snappedW = (vSize.width / cellW).round().clamp(
           s.preview.minW,
           cols - s.initialX,
-        ).toInt();
-        final int newY = (s.initialY + deltaY).clamp(
+        );
+        final int snappedY = (vPos.dy / cellH).round().clamp(
           0,
           s.initialY + s.initialH - s.preview.minH,
-        ).toInt();
-        p = p.copyWith(w: newW, y: newY, h: s.initialY + s.initialH - newY);
+        );
+        p = p.copyWith(w: snappedW, y: snappedY, h: s.initialY + s.initialH - snappedY);
         break;
       case ZeusHandle.topLeft:
-        final int deltaX = gridX - s.initialGridX;
-        final int deltaY = gridY - s.initialGridY;
-        final int newX = (s.initialX + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        final double deltaY = local.dy - s.initialGridY * cellH;
+
+        final double minW = s.preview.minW * cellW;
+        final double minH = s.preview.minH * cellH;
+
+        if ((s.initialW * cellW - deltaX) < minW) {
+          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
+          vSize = Size(minW, vSize.height);
+        } else {
+          vPos = Offset((s.initialX * cellW + deltaX).clamp(0, double.infinity), vPos.dy);
+          vSize = Size(s.initialW * cellW - deltaX, vSize.height);
+        }
+
+        if ((s.initialH * cellH - deltaY) < minH) {
+          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+          vSize = Size(vSize.width, minH);
+        } else {
+          vPos = Offset(vPos.dx, (s.initialY * cellH + deltaY).clamp(0, double.infinity));
+          vSize = Size(vSize.width, s.initialH * cellH - deltaY);
+        }
+
+        final int snappedX = (vPos.dx / cellW).round().clamp(
           0,
           s.initialX + s.initialW - s.preview.minW,
-        ).toInt();
-        final int newY = (s.initialY + deltaY).clamp(
+        );
+        final int snappedY = (vPos.dy / cellH).round().clamp(
           0,
           s.initialY + s.initialH - s.preview.minH,
-        ).toInt();
+        );
         p = p.copyWith(
-          x: newX,
-          w: s.initialX + s.initialW - newX,
-          y: newY,
-          h: s.initialY + s.initialH - newY,
+          x: snappedX,
+          w: s.initialX + s.initialW - snappedX,
+          y: snappedY,
+          h: s.initialY + s.initialH - snappedY,
         );
         break;
       case ZeusHandle.bottomLeft:
-        final int deltaX = gridX - s.initialGridX;
-        final int deltaY = gridY - s.initialGridY;
-        final int newX = (s.initialX + deltaX).clamp(
+        final double deltaX = local.dx - s.initialGridX * cellW;
+        final double deltaY = local.dy - s.initialGridY * cellH;
+
+        final double minW = s.preview.minW * cellW;
+        if ((s.initialW * cellW - deltaX) < minW) {
+          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
+          vSize = Size(minW, (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, double.infinity));
+        } else {
+          vPos = Offset((s.initialX * cellW + deltaX).clamp(0, double.infinity), vPos.dy);
+          vSize = Size(s.initialW * cellW - deltaX, (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, double.infinity));
+        }
+
+        final int snappedX = (vPos.dx / cellW).round().clamp(
           0,
           s.initialX + s.initialW - s.preview.minW,
-        ).toInt();
-        final int newH = (s.initialH + deltaY).clamp(
+        );
+        final int snappedH = (vSize.height / cellH).round().clamp(
           s.preview.minH,
           rows - s.initialY,
-        ).toInt();
-        p = p.copyWith(x: newX, w: s.initialX + s.initialW - newX, h: newH);
+        );
+        p = p.copyWith(x: snappedX, w: s.initialX + s.initialW - snappedX, h: snappedH);
         break;
     }
 
@@ -698,6 +808,8 @@ class _ZeusGridState extends State<ZeusGrid> {
       preview: p,
       isOverGrid: overGrid,
       isValid: !_collision(p),
+      visualPosition: vPos,
+      visualSize: vSize,
     );
   }
 

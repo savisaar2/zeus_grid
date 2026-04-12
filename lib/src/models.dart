@@ -63,6 +63,8 @@ class ZeusSession {
   final int initialH;
   final int initialX;
   final int initialY;
+  final Offset visualPosition;
+  final Size visualSize;
 
   const ZeusSession({
     required this.id,
@@ -78,9 +80,17 @@ class ZeusSession {
     this.initialH = 0,
     this.initialX = 0,
     this.initialY = 0,
+    this.visualPosition = Offset.zero,
+    this.visualSize = Size.zero,
   });
 
-  ZeusSession copyWith({ZeusModule? preview, bool? isOverGrid, bool? isValid}) {
+  ZeusSession copyWith({
+    ZeusModule? preview,
+    bool? isOverGrid,
+    bool? isValid,
+    Offset? visualPosition,
+    Size? visualSize,
+  }) {
     return ZeusSession(
       id: id,
       preview: preview ?? this.preview,
@@ -95,6 +105,8 @@ class ZeusSession {
       initialH: initialH,
       initialX: initialX,
       initialY: initialY,
+      visualPosition: visualPosition ?? this.visualPosition,
+      visualSize: visualSize ?? this.visualSize,
     );
   }
 }
