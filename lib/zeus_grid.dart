@@ -154,8 +154,20 @@ class _ZeusGridState extends State<ZeusGrid> {
                             ),
                           ),
                         ),
-                      ...staticModules.map((m) => _buildModuleWrapper(
-                          m, null, cellW, cellH, cols, rows)),
+                      ...staticModules.map((m) => ZeusModuleWidget(
+                            key: ValueKey('module_${m.id}'),
+                            module: m,
+                            session: null,
+                            isEditing: widget.isEditing,
+                            isFocused: widget.isEditing && _focusedModuleId == m.id,
+                            cellW: cellW,
+                            cellH: cellH,
+                            moduleStyle: widget.moduleStyle,
+                            content: widget.onGenerateContent(m.id),
+                            onStartSession: _startSession,
+                            onRemove: () => widget.onModuleRemove(m.id),
+                            onFocusChange: (id) => setState(() => _focusedModuleId = id),
+                          )),
                     ],
                   );
                 },
@@ -175,8 +187,20 @@ class _ZeusGridState extends State<ZeusGrid> {
                   // The "Ghost" Preview (snapped)
                   _buildGhost(session.preview, session.isValid, cellW, cellH),
                   // The smooth Active Module
-                  _buildModuleWrapper(
-                      session.preview, session, cellW, cellH, cols, rows),
+                  ZeusModuleWidget(
+                    key: ValueKey('module_active_${session.id}'),
+                    module: session.preview,
+                    session: session,
+                    isEditing: widget.isEditing,
+                    isFocused: true,
+                    cellW: cellW,
+                    cellH: cellH,
+                    moduleStyle: widget.moduleStyle,
+                    content: widget.onGenerateContent(session.id),
+                    onStartSession: _startSession,
+                    onRemove: () => widget.onModuleRemove(session.id),
+                    onFocusChange: (id) => setState(() => _focusedModuleId = id),
+                  ),
                 ],
               );
             },
@@ -201,356 +225,6 @@ class _ZeusGridState extends State<ZeusGrid> {
             ),
             borderRadius: widget.moduleStyle.borderRadius,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModuleWrapper(
-    ZeusModule m,
-    ZeusSession? session,
-    double cellW,
-    double cellH,
-    int gridCols,
-    int gridRows,
-  ) {
-    final isActive = session?.id == m.id;
-    final isFocused = widget.isEditing && _focusedModuleId == m.id;
-    final isValid = isActive ? session!.isValid : true;
-
-    final x = isActive ? session!.visualPosition.dx : m.x * cellW;
-    final y = isActive ? session!.visualPosition.dy : m.y * cellH;
-    final double physicalW = isActive ? session!.visualSize.width : (m.w * cellW);
-    final double physicalH = isActive ? session!.visualSize.height : (m.h * cellH);
-
-    final hLen = (physicalW < (_kHandleLength * 3) || physicalH < (_kHandleLength * 3))
-        ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
-        : _kHandleLength;
-    final hitS = (physicalW < (_kHitAreaSize * 2) || physicalH < (_kHitAreaSize * 2))
-        ? (physicalW < physicalH ? physicalW / 2 : physicalH / 2)
-        : _kHitAreaSize;
-
-    return AnimatedPositioned(
-      key: ValueKey('module_${m.id}'),
-      duration: (session != null) ? Duration.zero : const Duration(milliseconds: 150),
-      curve: Curves.easeOut,
-      left: x,
-      top: y,
-      width: physicalW,
-      height: physicalH,
-      child: RepaintBoundary(
-        child: MouseRegion(
-          onHover: (e) {
-            if (!widget.isEditing || isActive) return;
-            final lx = e.localPosition.dx;
-            final ly = e.localPosition.dy;
-            if (lx >= 0 &&
-                lx <= physicalW &&
-                ly >= 0 &&
-                ly <= physicalH) {
-              if (_focusedModuleId != m.id) {
-                setState(() => _focusedModuleId = m.id);
-              }
-            } else {
-              if (_focusedModuleId == m.id) {
-                setState(() => _focusedModuleId = null);
-              }
-            }
-          },
-          onExit: (_) {
-            if (widget.isEditing && !isActive && _focusedModuleId == m.id) {
-              setState(() => _focusedModuleId = null);
-            }
-          },
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Move Listener wraps only the Card
-              Positioned.fill(
-                child: Listener(
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: (e) =>
-                      widget.isEditing ? _startSession(m, e, false) : null,
-                  child: _buildCard(
-                    m,
-                    isActive,
-                    isFocused,
-                    isValid,
-                    m.x,
-                    m.y,
-                    m.w,
-                    m.h,
-                  ),
-                ),
-              ),
-              if (widget.isEditing && (isFocused || isActive)) ...[
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.topLeft,
-                  left: _kHandleInset,
-                  top: _kHandleInset,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.topRight,
-                  left: physicalW - _kHandleInset - hLen,
-                  top: _kHandleInset,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.bottomRight,
-                  left: physicalW - _kHandleInset - hLen,
-                  top: physicalH - _kHandleInset - _kHandleThickness,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.bottomLeft,
-                  left: _kHandleInset,
-                  top: physicalH - _kHandleInset - _kHandleThickness,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.top,
-                  left: physicalW / 2 - (hLen / 2),
-                  top: _kHandleInset,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.bottom,
-                  left: physicalW / 2 - (hLen / 2),
-                  top: physicalH - _kHandleInset - _kHandleThickness,
-                  width: hLen,
-                  height: _kHandleThickness,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.left,
-                  left: _kHandleInset,
-                  top: physicalH / 2 - (hLen / 2),
-                  width: _kHandleThickness,
-                  height: hLen,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                _buildResizeHandle(
-                  m,
-                  ZeusHandle.right,
-                  left: physicalW - _kHandleInset - _kHandleThickness,
-                  top: physicalH / 2 - (hLen / 2),
-                  width: _kHandleThickness,
-                  height: hLen,
-                  hitWidth: hitS,
-                  hitHeight: hitS,
-                ),
-                Positioned(
-                  left: 10,
-                  top: 10,
-                  child: GestureDetector(
-                    onTap: () => widget.onModuleRemove(m.id),
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResizeHandle(
-    ZeusModule m,
-    ZeusHandle handle, {
-    double? left,
-    double? top,
-    double? right,
-    double? bottom,
-    double? width,
-    double? height,
-    double? hitLeft,
-    double? hitTop,
-    double? hitWidth,
-    double? hitHeight,
-  }) {
-    final hWidth = hitWidth ?? _kHitAreaSize;
-    final hHeight = hitHeight ?? _kHitAreaSize;
-
-    // Center hit area over visual bars
-    final hLeft = hitLeft ?? (left != null ? left - (hWidth - (width ?? 0)) / 2 : (right != null ? right - hWidth : 0));
-    final hTop = hitTop ?? (top != null ? top - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom - hHeight : 0));
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        if (handle == ZeusHandle.topLeft) ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-          Positioned(
-            left: left,
-            top: top,
-            width: height,
-            height: width,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ] else if (handle == ZeusHandle.topRight) ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-          Positioned(
-            left: left != null ? left + (width! - height!) : null,
-            top: top,
-            width: height,
-            height: width,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ] else if (handle == ZeusHandle.bottomRight) ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-          Positioned(
-            left: left != null ? left + (width! - height!) : null,
-            top: top != null ? top - (width! - height!) : null,
-            width: height,
-            height: width,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ] else if (handle == ZeusHandle.bottomLeft) ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-          Positioned(
-            left: left,
-            top: top != null ? top - (width! - height!) : null,
-            width: height,
-            height: width,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ] else if (handle == ZeusHandle.top || handle == ZeusHandle.bottom) ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ] else ...[
-          Positioned(
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-            child: Container(color: Colors.white.withValues(alpha: 0.8)),
-          ),
-        ],
-        // Hit area moved to last position in Stack to be on top of visual bars
-        Positioned(
-          left: hLeft,
-          top: hTop,
-          width: hWidth,
-          height: hHeight,
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (e) => _startSession(m, e, false, handle: handle),
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCard(
-    ZeusModule m,
-    bool isActive,
-    bool isFocused,
-    bool isValid,
-    int x,
-    int y,
-    int w,
-    int h,
-  ) {
-    final border = (isFocused || isActive)
-        ? (isValid
-              ? widget.moduleStyle.activeBorderColor
-              : widget.moduleStyle.warningBorderColor)
-        : (widget.isEditing ? Colors.white.withAlpha(26) : Colors.transparent);
-
-    final bgColor = isActive
-        ? Color.alphaBlend(
-            border.withAlpha(50),
-            widget.moduleStyle.color,
-          )
-        : widget.moduleStyle.color;
-
-    return Opacity(
-      opacity: isActive ? widget.moduleStyle.activeOpacity : 1.0,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: Border.all(
-            color: border,
-            width: (isFocused || isActive) ? 2.0 : 1.0,
-          ),
-          borderRadius: widget.moduleStyle.borderRadius,
-          boxShadow: isActive
-              ? widget.moduleStyle.activeShadow
-              : widget.moduleStyle.baseShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: widget.moduleStyle.borderRadius,
-          child: widget.onGenerateContent(m.id),
         ),
       ),
     );
@@ -1033,6 +707,385 @@ class _ZeusGridState extends State<ZeusGrid> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ZeusModuleWidget extends StatelessWidget {
+  final ZeusModule module;
+  final ZeusSession? session;
+  final bool isEditing;
+  final bool isFocused;
+  final double cellW;
+  final double cellH;
+  final ModuleStyle moduleStyle;
+  final Widget content;
+  final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
+      onStartSession;
+  final VoidCallback onRemove;
+  final Function(String?) onFocusChange;
+
+  const ZeusModuleWidget({
+    super.key,
+    required this.module,
+    required this.session,
+    required this.isEditing,
+    required this.isFocused,
+    required this.cellW,
+    required this.cellH,
+    required this.moduleStyle,
+    required this.content,
+    required this.onStartSession,
+    required this.onRemove,
+    required this.onFocusChange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final m = module;
+    final isActive = session?.id == m.id;
+    final isValid = isActive ? session!.isValid : true;
+
+    final x = isActive ? session!.visualPosition.dx : m.x * cellW;
+    final y = isActive ? session!.visualPosition.dy : m.y * cellH;
+    final double physicalW =
+        isActive ? session!.visualSize.width : (m.w * cellW);
+    final double physicalH =
+        isActive ? session!.visualSize.height : (m.h * cellH);
+
+    final hLen = (physicalW < (_kHandleLength * 3) ||
+            physicalH < (_kHandleLength * 3))
+        ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
+        : _kHandleLength;
+    final hitS = (physicalW < (_kHitAreaSize * 2) ||
+            physicalH < (_kHitAreaSize * 2))
+        ? (physicalW < physicalH ? physicalW / 2 : physicalH / 2)
+        : _kHitAreaSize;
+
+    return AnimatedPositioned(
+      key: ValueKey('module_${m.id}'),
+      duration:
+          (session != null) ? Duration.zero : const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      left: x,
+      top: y,
+      width: physicalW,
+      height: physicalH,
+      child: RepaintBoundary(
+        child: MouseRegion(
+          onHover: (e) {
+            if (!isEditing || isActive) return;
+            final lx = e.localPosition.dx;
+            final ly = e.localPosition.dy;
+            if (lx >= 0 && lx <= physicalW && ly >= 0 && ly <= physicalH) {
+              onFocusChange(m.id);
+            } else {
+              onFocusChange(null);
+            }
+          },
+          onExit: (_) {
+            if (isEditing && !isActive) {
+              onFocusChange(null);
+            }
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (e) =>
+                      isEditing ? onStartSession(m, e, false) : null,
+                  child: _ModuleCard(
+                    module: m,
+                    isActive: isActive,
+                    isFocused: isFocused,
+                    isValid: isValid,
+                    moduleStyle: moduleStyle,
+                    content: content,
+                  ),
+                ),
+              ),
+              if (isEditing && (isFocused || isActive)) ...[
+                _ResizeHandle(
+                  handle: ZeusHandle.topLeft,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: _kHandleInset,
+                  top: _kHandleInset,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.topRight,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: physicalW - _kHandleInset - hLen,
+                  top: _kHandleInset,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.bottomRight,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: physicalW - _kHandleInset - hLen,
+                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.bottomLeft,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: _kHandleInset,
+                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.top,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: physicalW / 2 - (hLen / 2),
+                  top: _kHandleInset,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.bottom,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: physicalW / 2 - (hLen / 2),
+                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  width: hLen,
+                  height: _kHandleThickness,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.left,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: _kHandleInset,
+                  top: physicalH / 2 - (hLen / 2),
+                  width: _kHandleThickness,
+                  height: hLen,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                _ResizeHandle(
+                  handle: ZeusHandle.right,
+                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  left: physicalW - _kHandleInset - _kHandleThickness,
+                  top: physicalH / 2 - (hLen / 2),
+                  width: _kHandleThickness,
+                  height: hLen,
+                  hitWidth: hitS,
+                  hitHeight: hitS,
+                ),
+                Positioned(
+                  left: 10,
+                  top: 10,
+                  child: GestureDetector(
+                    onTap: onRemove,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleCard extends StatelessWidget {
+  final ZeusModule module;
+  final bool isActive;
+  final bool isFocused;
+  final bool isValid;
+  final ModuleStyle moduleStyle;
+  final Widget content;
+
+  const _ModuleCard({
+    required this.module,
+    required this.isActive,
+    required this.isFocused,
+    required this.isValid,
+    required this.moduleStyle,
+    required this.content,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final border = (isFocused || isActive)
+        ? (isValid
+            ? moduleStyle.activeBorderColor
+            : moduleStyle.warningBorderColor)
+        : Colors.white.withAlpha(26);
+
+    final Color effectiveBorder =
+        (isFocused || isActive) ? border : Colors.white.withAlpha(26);
+
+    final bgColor = isActive
+        ? Color.alphaBlend(
+            border.withAlpha(50),
+            moduleStyle.color,
+          )
+        : moduleStyle.color;
+
+    return Opacity(
+      opacity: isActive ? moduleStyle.activeOpacity : 1.0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: Border.all(
+            color: effectiveBorder,
+            width: (isFocused || isActive) ? 2.0 : 1.0,
+          ),
+          borderRadius: moduleStyle.borderRadius,
+          boxShadow: isActive ? moduleStyle.activeShadow : moduleStyle.baseShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: moduleStyle.borderRadius,
+          child: content,
+        ),
+      ),
+    );
+  }
+}
+
+class _ResizeHandle extends StatelessWidget {
+  final ZeusHandle handle;
+  final Function(PointerDownEvent, ZeusHandle) onStartSession;
+  final double? left, top, right, bottom, width, height, hitWidth, hitHeight;
+
+  const _ResizeHandle({
+    required this.handle,
+    required this.onStartSession,
+    this.left,
+    this.top,
+    this.right,
+    this.bottom,
+    this.width,
+    this.height,
+    this.hitWidth,
+    this.hitHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hWidth = hitWidth ?? _kHitAreaSize;
+    final hHeight = hitHeight ?? _kHitAreaSize;
+
+    final hLeft =
+        left != null ? left! - (hWidth - (width ?? 0)) / 2 : (right != null ? right! - hWidth : 0.0);
+    final hTop =
+        top != null ? top! - (hHeight - (height ?? 0)) / 2 : (bottom != null ? bottom! - hHeight : 0.0);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (handle == ZeusHandle.topLeft) ...[
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+          Positioned(
+            left: left,
+            top: top,
+            width: height,
+            height: width,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ] else if (handle == ZeusHandle.topRight) ...[
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+          Positioned(
+            left: left != null ? left! + (width! - height!) : null,
+            top: top,
+            width: height,
+            height: width,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ] else if (handle == ZeusHandle.bottomRight) ...[
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+          Positioned(
+            left: left != null ? left! + (width! - height!) : null,
+            top: top != null ? top! - (width! - height!) : null,
+            width: height,
+            height: width,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ] else if (handle == ZeusHandle.bottomLeft) ...[
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+          Positioned(
+            left: left,
+            top: top != null ? top! - (width! - height!) : null,
+            width: height,
+            height: width,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ] else ...[
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            child: Container(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ],
+        Positioned(
+          left: hLeft,
+          top: hTop,
+          width: hWidth,
+          height: hHeight,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) => onStartSession(e, handle),
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ],
     );
   }
 }
