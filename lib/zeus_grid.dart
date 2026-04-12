@@ -137,38 +137,37 @@ class _ZeusGridState extends State<ZeusGrid> {
                     (a, b) => (a.id == _focusedModuleId) ? 1 : -1,
                   );
 
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      if (widget.isEditing)
-                        Positioned.fill(
-                          child: RepaintBoundary(
-                            child: CustomPaint(
-                              painter: GridPainter(
-                                style: widget.gridStyle,
-                                cellW: cellW,
-                                cellH: cellH,
-                                rows: rows,
-                                cols: cols,
-                              ),
+                  return IgnorePointer(
+                    ignoring: activeId != null,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        if (widget.isEditing)
+                          Positioned.fill(
+                            child: ZeusGridBackground(
+                              style: widget.gridStyle,
+                              cellW: cellW,
+                              cellH: cellH,
+                              rows: rows,
+                              cols: cols,
                             ),
                           ),
-                        ),
-                      ...staticModules.map((m) => ZeusModuleWidget(
-                            key: ValueKey('module_${m.id}'),
-                            module: m,
-                            session: null,
-                            isEditing: widget.isEditing,
-                            isFocused: widget.isEditing && _focusedModuleId == m.id,
-                            cellW: cellW,
-                            cellH: cellH,
-                            moduleStyle: widget.moduleStyle,
-                            content: widget.onGenerateContent(m.id),
-                            onStartSession: _startSession,
-                            onRemove: () => widget.onModuleRemove(m.id),
-                            onFocusChange: (id) => setState(() => _focusedModuleId = id),
-                          )),
-                    ],
+                        ...staticModules.map((m) => ZeusModuleWidget(
+                              key: ValueKey('module_${m.id}'),
+                              module: m,
+                              session: null,
+                              isEditing: widget.isEditing,
+                              isFocused: widget.isEditing && _focusedModuleId == m.id,
+                              cellW: cellW,
+                              cellH: cellH,
+                              moduleStyle: widget.moduleStyle,
+                              content: widget.onGenerateContent(m.id),
+                              onStartSession: _startSession,
+                              onRemove: () => widget.onModuleRemove(m.id),
+                              onFocusChange: (id) => setState(() => _focusedModuleId = id),
+                            )),
+                      ],
+                    ),
                   );
                 },
               );
@@ -1086,6 +1085,38 @@ class _ResizeHandle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class ZeusGridBackground extends StatelessWidget {
+  final GridStyle style;
+  final double cellW;
+  final double cellH;
+  final int rows;
+  final int cols;
+
+  const ZeusGridBackground({
+    super.key,
+    required this.style,
+    required this.cellW,
+    required this.cellH,
+    required this.rows,
+    required this.cols,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: GridPainter(
+          style: style,
+          cellW: cellW,
+          cellH: cellH,
+          rows: rows,
+          cols: cols,
+        ),
+      ),
     );
   }
 }
