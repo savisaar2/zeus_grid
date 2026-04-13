@@ -41,7 +41,7 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
               Switch(
                 value: _isEditing,
                 onChanged: (v) => setState(() => _isEditing = v),
-                activeColor: Colors.greenAccent,
+                activeThumbColor: Colors.greenAccent,
               ),
             ],
           ),
@@ -55,7 +55,7 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
         modules: myModules,
         unplacedModules: myArsenal, 
         onGenerateContent: (id) => Container(
-          color: Colors.blueGrey.withOpacity(0.1),
+          color: Colors.blueGrey.withValues(alpha: 0.1),
           child: Center(
             child: Text(
               id.toUpperCase(),

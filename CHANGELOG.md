@@ -1,3 +1,15 @@
+## 1.1.0 - Tactical Expansion
+
+* **New Feature: Max Constraints** - Added `maxW` and `maxH` to `ZeusModule`. Dashboards can now enforce maximum sizes for widgets.
+* **New Feature: Multi-directional Gravity** - Introduced `PackDirection` support (`up`, `down`, `left`, `right`). Auto-packing now supports advanced flow patterns beyond simple downward gravity.
+* **New Feature: Customizable Resize Handles** - Added `resizeHandleBuilder` to `ModuleStyle`. Developers can now fully theme and replace the resize anchors.
+* **New Feature: Collision Callbacks** - Added `onCollisionDetected` callback to `ZeusGrid`, allowing host apps to react to invalid placements (e.g., showing a warning toast).
+* **Performance: Granular Rebuild Architecture** - Optimized the grid stack to rebuild only the actively moving module and its neighbors, preventing full-stack rebuilds during high-frequency drag events.
+* **Performance: Optimized Layout Resizing** - The grid now intelligently skips layout recalculations when the viewport expands, only triggering bounds-pushing logic during shrinking.
+* **UX: Ghost Drag Fill** - Ghost previews now feature a translucent semi-transparent fill for better visibility.
+* **UX: Persistent Visibility** - Modules no longer disappear when dragged past the window edges or over the arsenal menu.
+* **Fix: Consistency Fix** - Standardized all grid calculations to use strict `.floor()` logic, eliminating edge-case "rubber-banding" glitches.
+
 ## 1.0.0 - Production Grade Release
 
 * **New Feature: Auto-packing / Collision Resolution** - Modules now dynamically "push" each other out of the way during drag and resize operations, ensuring a valid layout at all times.
