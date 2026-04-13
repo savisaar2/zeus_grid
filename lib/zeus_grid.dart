@@ -16,6 +16,7 @@ class ZeusGrid extends StatefulWidget {
   final ModuleStyle moduleStyle;
   final ZeusMenuStyle menuStyle;
   final double cellSide;
+  final double spacing;
   final bool autoPack;
   final PackDirection packDirection;
 
@@ -32,6 +33,7 @@ class ZeusGrid extends StatefulWidget {
     this.moduleStyle = const ModuleStyle(),
     this.menuStyle = const ZeusMenuStyle(),
     this.cellSide = 10.0,
+    this.spacing = 0.0,
     this.autoPack = false,
     this.packDirection = PackDirection.down,
   });
@@ -87,7 +89,7 @@ class _ZeusGridState extends State<ZeusGrid> {
           child: Stack(
             children: [
               Container(color: widget.gridStyle.backgroundColor),
-              _buildVirtualGrid(cellW, cellH, cols, rows),
+              _buildVirtualGrid(cellW, cellH, cols, rows, widget.spacing),
               _buildArsenalDrawer(widget.isEditing, cellW, cellH),
             ],
           ),
@@ -126,7 +128,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     }
   }
 
-  Widget _buildVirtualGrid(double cellW, double cellH, int cols, int rows) {
+  Widget _buildVirtualGrid(double cellW, double cellH, int cols, int rows, double spacing) {
     return SizedBox.expand(
       child: Stack(
         key: _gridKey,
@@ -153,6 +155,7 @@ class _ZeusGridState extends State<ZeusGrid> {
               isFocused: widget.isEditing && _focusedModuleId == m.id,
               cellW: cellW,
               cellH: cellH,
+              spacing: spacing,
               moduleStyle: widget.moduleStyle,
               content: widget.onGenerateContent(m.id),
               onStartSession: _startSession,
@@ -176,7 +179,7 @@ class _ZeusGridState extends State<ZeusGrid> {
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  _buildGhost(session.preview, session.isValid, cellW, cellH),
+                  _buildGhost(session.preview, session.isValid, cellW, cellH, spacing),
                   ZeusModuleWidget(
                     key: ValueKey('module_active_${session.id}'),
                     module: session.preview,
@@ -185,6 +188,7 @@ class _ZeusGridState extends State<ZeusGrid> {
                     isFocused: true,
                     cellW: cellW,
                     cellH: cellH,
+                    spacing: spacing,
                     moduleStyle: widget.moduleStyle,
                     content: widget.onGenerateContent(session.id),
                     onStartSession: _startSession,
@@ -200,7 +204,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     );
   }
 
-  Widget _buildGhost(ZeusModule m, bool isValid, double cellW, double cellH) {
+  Widget _buildGhost(ZeusModule m, bool isValid, double cellW, double cellH, double spacing) {
     final color = isValid ? Colors.cyanAccent : Colors.redAccent;
     return Positioned(
       left: m.x * cellW,
@@ -209,13 +213,16 @@ class _ZeusGridState extends State<ZeusGrid> {
       height: m.h * cellH,
       child: RepaintBoundary(
         child: Container(
-          decoration: BoxDecoration(
-            color: color.withAlpha(20),
-            border: Border.all(
-              color: color.withAlpha(100),
-              width: 2,
+          padding: EdgeInsets.all(spacing / 2),
+          child: Container(
+            decoration: BoxDecoration(
+              color: color.withAlpha(20),
+              border: Border.all(
+                color: color.withAlpha(100),
+                width: 2,
+              ),
+              borderRadius: widget.moduleStyle.borderRadius,
             ),
-            borderRadius: widget.moduleStyle.borderRadius,
           ),
         ),
       ),
@@ -285,8 +292,8 @@ class _ZeusGridState extends State<ZeusGrid> {
     final cellW = widget.cellSide;
     final cellH = widget.cellSide;
     
-    final cols = (rb.size.width / widget.cellSide).ceil();
-    final rows = (rb.size.height / widget.cellSide).ceil();
+    final cols = (rb.size.width / widget.cellSide).floor();
+    final rows = (rb.size.height / widget.cellSide).floor();
 
     final local = rb.globalToLocal(e.position);
     _lastMousePosition = local;
@@ -816,6 +823,7 @@ class ZeusModuleWidget extends StatelessWidget {
   final bool isFocused;
   final double cellW;
   final double cellH;
+  final double spacing;
   final ModuleStyle moduleStyle;
   final Widget content;
   final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
@@ -831,6 +839,7 @@ class ZeusModuleWidget extends StatelessWidget {
     required this.isFocused,
     required this.cellW,
     required this.cellH,
+    required this.spacing,
     required this.moduleStyle,
     required this.content,
     required this.onStartSession,
@@ -899,6 +908,7 @@ class ZeusModuleWidget extends StatelessWidget {
                     isActive: isActive,
                     isFocused: isFocused,
                     isValid: isValid,
+                    spacing: spacing,
                     moduleStyle: moduleStyle,
                     content: content,
                   ),
@@ -909,8 +919,8 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.topLeft,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: _kHandleInset,
-                  top: _kHandleInset,
+                  left: _kHandleInset + spacing / 2,
+                  top: _kHandleInset + spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -920,8 +930,8 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.topRight,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: physicalW - _kHandleInset - hLen,
-                  top: _kHandleInset,
+                  left: physicalW - _kHandleInset - hLen - spacing / 2,
+                  top: _kHandleInset + spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -931,8 +941,8 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.bottomRight,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: physicalW - _kHandleInset - hLen,
-                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  left: physicalW - _kHandleInset - hLen - spacing / 2,
+                  top: physicalH - _kHandleInset - _kHandleThickness - spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -942,8 +952,8 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.bottomLeft,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: _kHandleInset,
-                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  left: _kHandleInset + spacing / 2,
+                  top: physicalH - _kHandleInset - _kHandleThickness - spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -954,7 +964,7 @@ class ZeusModuleWidget extends StatelessWidget {
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
-                  top: _kHandleInset,
+                  top: _kHandleInset + spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -965,7 +975,7 @@ class ZeusModuleWidget extends StatelessWidget {
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
-                  top: physicalH - _kHandleInset - _kHandleThickness,
+                  top: physicalH - _kHandleInset - _kHandleThickness - spacing / 2,
                   width: hLen,
                   height: _kHandleThickness,
                   hitWidth: hitS,
@@ -975,7 +985,7 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.left,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: _kHandleInset,
+                  left: _kHandleInset + spacing / 2,
                   top: physicalH / 2 - (hLen / 2),
                   width: _kHandleThickness,
                   height: hLen,
@@ -986,7 +996,7 @@ class ZeusModuleWidget extends StatelessWidget {
                   handle: ZeusHandle.right,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
-                  left: physicalW - _kHandleInset - _kHandleThickness,
+                  left: physicalW - _kHandleInset - _kHandleThickness - spacing / 2,
                   top: physicalH / 2 - (hLen / 2),
                   width: _kHandleThickness,
                   height: hLen,
@@ -994,8 +1004,8 @@ class ZeusModuleWidget extends StatelessWidget {
                   hitHeight: hitS,
                 ),
                 Positioned(
-                  left: 10,
-                  top: 10,
+                  left: 10 + spacing / 2,
+                  top: 10 + spacing / 2,
                   child: GestureDetector(
                     onTap: onRemove,
                     child: Container(
@@ -1027,6 +1037,7 @@ class _ModuleCard extends StatelessWidget {
   final bool isActive;
   final bool isFocused;
   final bool isValid;
+  final double spacing;
   final ModuleStyle moduleStyle;
   final Widget content;
 
@@ -1035,6 +1046,7 @@ class _ModuleCard extends StatelessWidget {
     required this.isActive,
     required this.isFocused,
     required this.isValid,
+    required this.spacing,
     required this.moduleStyle,
     required this.content,
   });
@@ -1057,23 +1069,26 @@ class _ModuleCard extends StatelessWidget {
           )
         : moduleStyle.color;
 
-    return Opacity(
-      opacity: isActive ? moduleStyle.activeOpacity : 1.0,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: Border.all(
-            color: effectiveBorder,
-            width: (isFocused || isActive) ? 2.0 : 1.0,
+    return Padding(
+      padding: EdgeInsets.all(spacing / 2),
+      child: Opacity(
+        opacity: isActive ? moduleStyle.activeOpacity : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              color: effectiveBorder,
+              width: (isFocused || isActive) ? 2.0 : 1.0,
+            ),
+            borderRadius: moduleStyle.borderRadius,
+            boxShadow: isActive ? moduleStyle.activeShadow : moduleStyle.baseShadow,
           ),
-          borderRadius: moduleStyle.borderRadius,
-          boxShadow: isActive ? moduleStyle.activeShadow : moduleStyle.baseShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: moduleStyle.borderRadius,
-          child: content,
+          child: ClipRRect(
+            borderRadius: moduleStyle.borderRadius,
+            child: content,
+          ),
         ),
       ),
     );
@@ -1252,6 +1267,7 @@ class _ModuleWrapper extends StatelessWidget {
   final bool isFocused;
   final double cellW;
   final double cellH;
+  final double spacing;
   final ModuleStyle moduleStyle;
   final Widget content;
   final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
@@ -1269,6 +1285,7 @@ class _ModuleWrapper extends StatelessWidget {
     required this.isFocused,
     required this.cellW,
     required this.cellH,
+    required this.spacing,
     required this.moduleStyle,
     required this.content,
     required this.onStartSession,
@@ -1306,6 +1323,7 @@ class _ModuleWrapper extends StatelessWidget {
               isFocused: isFocused,
               cellW: cellW,
               cellH: cellH,
+              spacing: spacing,
               moduleStyle: moduleStyle,
               content: content,
               onStartSession: onStartSession,
