@@ -164,9 +164,15 @@ class _ZeusGridState extends State<ZeusGrid> {
           ValueListenableBuilder<ZeusSession?>(
             valueListenable: _activeSession,
             builder: (context, session, _) {
-              if (session == null || !session.isOverGrid) {
+              if (session == null) {
                 return const SizedBox.shrink();
               }
+              
+              // Only hide if it's a new module from drawer and it's not over the grid
+              if (session.isFromDrawer && !session.isOverGrid) {
+                return const SizedBox.shrink();
+              }
+
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
