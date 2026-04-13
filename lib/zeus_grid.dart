@@ -11,6 +11,7 @@ class ZeusGrid extends StatefulWidget {
   final Widget Function(String id) onGenerateContent;
   final Function(ZeusModule) onModuleUpdate;
   final Function(String) onModuleRemove;
+  final Function(ZeusModule collision)? onCollisionDetected;
   final GridStyle gridStyle;
   final ModuleStyle moduleStyle;
   final ZeusMenuStyle menuStyle;
@@ -26,6 +27,7 @@ class ZeusGrid extends StatefulWidget {
     required this.onGenerateContent,
     required this.onModuleUpdate,
     required this.onModuleRemove,
+    this.onCollisionDetected,
     this.gridStyle = const GridStyle(),
     this.moduleStyle = const ModuleStyle(),
     this.menuStyle = const ZeusMenuStyle(),
@@ -593,6 +595,8 @@ class _ZeusGridState extends State<ZeusGrid> {
         }
       }
       widget.onModuleUpdate(s.preview);
+    } else if (!s.isValid && s.isOverGrid) {
+      widget.onCollisionDetected?.call(s.preview);
     }
 
     _activeSession.value = null;
