@@ -61,9 +61,10 @@ class _ZeusGridState extends State<ZeusGrid> {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         
         if (_lastSize != null && _lastSize != size) {
+          final oldSize = _lastSize!;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            _pushModulesIntoBounds(size);
+            _pushModulesIntoBounds(size, oldSize);
           });
         }
         _lastSize = size;
@@ -71,8 +72,8 @@ class _ZeusGridState extends State<ZeusGrid> {
         final cellW = widget.cellSide;
         final cellH = widget.cellSide;
         
-        final cols = (constraints.maxWidth / widget.cellSide).ceil();
-        final rows = (constraints.maxHeight / widget.cellSide).ceil();
+        final cols = (constraints.maxWidth / widget.cellSide).floor();
+        final rows = (constraints.maxHeight / widget.cellSide).floor();
 
         return Listener(
           behavior: HitTestBehavior.translucent,
@@ -95,9 +96,15 @@ class _ZeusGridState extends State<ZeusGrid> {
     );
   }
 
-  void _pushModulesIntoBounds(Size size) {
+  void _pushModulesIntoBounds(Size size, Size oldSize) {
     final cols = (size.width / widget.cellSide).floor();
     final rows = (size.height / widget.cellSide).floor();
+
+    final lastCols = (oldSize.width / widget.cellSide).floor();
+    final lastRows = (oldSize.height / widget.cellSide).floor();
+
+    // Optimization: only push if bounds shrank
+    if (cols >= lastCols && rows >= lastRows) return;
 
     for (var m in widget.modules) {
       int newX = m.x;
@@ -125,60 +132,35 @@ class _ZeusGridState extends State<ZeusGrid> {
         key: _gridKey,
         clipBehavior: Clip.none,
         children: [
-          // Layer 1: Static Grid & Background Modules
-          ValueListenableBuilder<String?>(
-            valueListenable: _activeSessionId,
-            builder: (context, activeId, _) {
-              return ValueListenableBuilder<List<ZeusModule>?>(
-                valueListenable: _packedModules,
-                builder: (context, packed, _) {
-                  final List<ZeusModule> baseList =
-                      packed ?? widget.modules;
-                  final List<ZeusModule> staticModules =
-                      baseList.where((m) => m.id != activeId).toList();
-
-                  // Sort to ensure focused module is on top of other static modules
-                  staticModules.sort(
-                    (a, b) => (a.id == _focusedModuleId) ? 1 : -1,
-                  );
-
-                  return IgnorePointer(
-                    ignoring: activeId != null,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        if (widget.isEditing)
-                          Positioned.fill(
-                            child: ZeusGridBackground(
-                              style: widget.gridStyle,
-                              cellW: cellW,
-                              cellH: cellH,
-                              rows: rows,
-                              cols: cols,
-                            ),
-                          ),
-                        ...staticModules.map((m) => ZeusModuleWidget(
-                              key: ValueKey('module_${m.id}'),
-                              module: m,
-                              session: null,
-                              isEditing: widget.isEditing,
-                              isFocused: widget.isEditing && _focusedModuleId == m.id,
-                              cellW: cellW,
-                              cellH: cellH,
-                              moduleStyle: widget.moduleStyle,
-                              content: widget.onGenerateContent(m.id),
-                              onStartSession: _startSession,
-                              onRemove: () => widget.onModuleRemove(m.id),
-                              onFocusChange: (id) => setState(() => _focusedModuleId = id),
-                            )),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-          // Layer 2: Dynamic Active Module
+          if (widget.isEditing)
+            Positioned.fill(
+              child: ZeusGridBackground(
+                style: widget.gridStyle,
+                cellW: cellW,
+                cellH: cellH,
+                rows: rows,
+                cols: cols,
+              ),
+            ),
+          ...widget.modules.map((m) {
+            return _ModuleWrapper(
+              key: ValueKey('module_wrapper_${m.id}'),
+              initialModule: m,
+              activeSessionId: _activeSessionId,
+              activeSession: _activeSession,
+              packedModules: _packedModules,
+              isEditing: widget.isEditing,
+              isFocused: widget.isEditing && _focusedModuleId == m.id,
+              cellW: cellW,
+              cellH: cellH,
+              moduleStyle: widget.moduleStyle,
+              content: widget.onGenerateContent(m.id),
+              onStartSession: _startSession,
+              onRemove: () => widget.onModuleRemove(m.id),
+              onFocusChange: (id) => setState(() => _focusedModuleId = id),
+            );
+          }),
+          // Active module ghost and smooth preview
           ValueListenableBuilder<ZeusSession?>(
             valueListenable: _activeSession,
             builder: (context, session, _) {
@@ -188,9 +170,7 @@ class _ZeusGridState extends State<ZeusGrid> {
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // The "Ghost" Preview (snapped)
                   _buildGhost(session.preview, session.isValid, cellW, cellH),
-                  // The smooth Active Module
                   ZeusModuleWidget(
                     key: ValueKey('module_active_${session.id}'),
                     module: session.preview,
@@ -1251,6 +1231,82 @@ class ZeusGridBackground extends StatelessWidget {
           cols: cols,
         ),
       ),
+    );
+  }
+}
+
+class _ModuleWrapper extends StatelessWidget {
+  final ZeusModule initialModule;
+  final ValueNotifier<String?> activeSessionId;
+  final ValueNotifier<ZeusSession?> activeSession;
+  final ValueNotifier<List<ZeusModule>?> packedModules;
+  final bool isEditing;
+  final bool isFocused;
+  final double cellW;
+  final double cellH;
+  final ModuleStyle moduleStyle;
+  final Widget content;
+  final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
+      onStartSession;
+  final VoidCallback onRemove;
+  final Function(String?) onFocusChange;
+
+  const _ModuleWrapper({
+    super.key,
+    required this.initialModule,
+    required this.activeSessionId,
+    required this.activeSession,
+    required this.packedModules,
+    required this.isEditing,
+    required this.isFocused,
+    required this.cellW,
+    required this.cellH,
+    required this.moduleStyle,
+    required this.content,
+    required this.onStartSession,
+    required this.onRemove,
+    required this.onFocusChange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: activeSessionId,
+      builder: (context, activeId, _) {
+        final bool isCurrentlyActive = activeId == initialModule.id;
+
+        if (isCurrentlyActive) {
+          return const SizedBox.shrink();
+        }
+
+        return ValueListenableBuilder<List<ZeusModule>?>(
+          valueListenable: packedModules,
+          builder: (context, packed, _) {
+            ZeusModule displayModule = initialModule;
+            if (packed != null) {
+              final idx = packed.indexWhere((m) => m.id == initialModule.id);
+              if (idx != -1) {
+                displayModule = packed[idx];
+              }
+            }
+
+            return ZeusModuleWidget(
+              key: ValueKey('module_${displayModule.id}'),
+              module: displayModule,
+              session: null,
+              isEditing: isEditing,
+              isFocused: isFocused,
+              cellW: cellW,
+              cellH: cellH,
+              moduleStyle: moduleStyle,
+              content: content,
+              onStartSession: onStartSession,
+              onRemove: onRemove,
+              onFocusChange: onFocusChange,
+            );
+          },
+        );
+      },
     );
   }
 }
