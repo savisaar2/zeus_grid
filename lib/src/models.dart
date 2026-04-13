@@ -189,6 +189,7 @@ class ModuleStyle {
   final double borderWidth; // 🎯 Added for extra customization
   final List<BoxShadow>? baseShadow;
   final List<BoxShadow>? activeShadow;
+  final Widget Function(ZeusHandle direction)? resizeHandleBuilder;
 
   const ModuleStyle({
     this.color = const Color(0xFF0A0A0A),
@@ -206,6 +207,7 @@ class ModuleStyle {
         spreadRadius: 2,
       )
     ],
+    this.resizeHandleBuilder,
   });
 }
 
