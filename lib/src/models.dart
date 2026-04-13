@@ -52,28 +52,28 @@ class ZeusModule {
   ZeusModule copy() => copyWith();
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'x': x,
-        'y': y,
-        'w': w,
-        'h': h,
-        'minW': minW,
-        'minH': minH,
-        'maxW': maxW,
-        'maxH': maxH,
-      };
+    'id': id,
+    'x': x,
+    'y': y,
+    'w': w,
+    'h': h,
+    'minW': minW,
+    'minH': minH,
+    'maxW': maxW,
+    'maxH': maxH,
+  };
 
   factory ZeusModule.fromJson(Map<String, dynamic> json) => ZeusModule(
-        id: json['id'] as String,
-        x: json['x'] as int,
-        y: json['y'] as int,
-        w: json['w'] as int,
-        h: json['h'] as int,
-        minW: (json['minW'] ?? 1) as int,
-        minH: (json['minH'] ?? 1) as int,
-        maxW: json['maxW'] as int?,
-        maxH: json['maxH'] as int?,
-      );
+    id: json['id'] as String,
+    x: json['x'] as int,
+    y: json['y'] as int,
+    w: json['w'] as int,
+    h: json['h'] as int,
+    minW: (json['minW'] ?? 1) as int,
+    minH: (json['minH'] ?? 1) as int,
+    maxW: json['maxW'] as int?,
+    maxH: json['maxH'] as int?,
+  );
 }
 
 enum ZeusHandle {
@@ -88,12 +88,7 @@ enum ZeusHandle {
   bottomRight,
 }
 
-enum PackDirection {
-  up,
-  down,
-  left,
-  right,
-}
+enum PackDirection { up, down, left, right }
 
 class ZeusSession {
   final String id;
@@ -201,11 +196,7 @@ class ModuleStyle {
     this.borderWidth = 1.0,
     this.baseShadow,
     this.activeShadow = const [
-      BoxShadow(
-        color: Color(0x3300FFFF),
-        blurRadius: 15,
-        spreadRadius: 2,
-      )
+      BoxShadow(color: Color(0x3300FFFF), blurRadius: 15, spreadRadius: 2),
     ],
     this.resizeHandleBuilder,
   });

@@ -59,7 +59,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        
+
         if (_lastSize != null && _lastSize != size) {
           final oldSize = _lastSize!;
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -71,7 +71,7 @@ class _ZeusGridState extends State<ZeusGrid> {
 
         final cellW = widget.cellSide;
         final cellH = widget.cellSide;
-        
+
         final cols = (constraints.maxWidth / widget.cellSide).floor();
         final rows = (constraints.maxHeight / widget.cellSide).floor();
 
@@ -167,7 +167,7 @@ class _ZeusGridState extends State<ZeusGrid> {
               if (session == null) {
                 return const SizedBox.shrink();
               }
-              
+
               // Only hide if it's a new module from drawer and it's not over the grid
               if (session.isFromDrawer && !session.isOverGrid) {
                 return const SizedBox.shrink();
@@ -189,7 +189,8 @@ class _ZeusGridState extends State<ZeusGrid> {
                     content: widget.onGenerateContent(session.id),
                     onStartSession: _startSession,
                     onRemove: () => widget.onModuleRemove(session.id),
-                    onFocusChange: (id) => setState(() => _focusedModuleId = id),
+                    onFocusChange: (id) =>
+                        setState(() => _focusedModuleId = id),
                   ),
                 ],
               );
@@ -211,10 +212,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         child: Container(
           decoration: BoxDecoration(
             color: color.withAlpha(20),
-            border: Border.all(
-              color: color.withAlpha(100),
-              width: 2,
-            ),
+            border: Border.all(color: color.withAlpha(100), width: 2),
             borderRadius: widget.moduleStyle.borderRadius,
           ),
         ),
@@ -245,7 +243,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     if (fromDrawer) {
       anchor = Offset(visualW / 2, visualH / 2);
     } else if (handle == ZeusHandle.move) {
-      // If a handle already started a resize session (which fires first as innermost), 
+      // If a handle already started a resize session (which fires first as innermost),
       // don't overwrite it with a move session.
       if (_activeSession.value != null) return;
       anchor = local - Offset(m.x * cellW, m.y * cellH);
@@ -284,7 +282,7 @@ class _ZeusGridState extends State<ZeusGrid> {
 
     final cellW = widget.cellSide;
     final cellH = widget.cellSide;
-    
+
     final cols = (rb.size.width / widget.cellSide).floor();
     final rows = (rb.size.height / widget.cellSide).floor();
 
@@ -339,13 +337,20 @@ class _ZeusGridState extends State<ZeusGrid> {
         final double rawW = s.initialW * cellW - deltaX;
 
         final double minW = s.preview.minW * cellW;
-        final double maxW = (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
+        final double maxW =
+            (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
 
         if (rawW < minW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - minW),
+            vPos.dy,
+          );
           vSize = Size(minW, vSize.height);
         } else if (rawW > maxW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - maxW), vPos.dy);
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - maxW),
+            vPos.dy,
+          );
           vSize = Size(maxW, vSize.height);
         } else {
           vPos = Offset(rawX.clamp(0, double.infinity), vPos.dy);
@@ -353,7 +358,12 @@ class _ZeusGridState extends State<ZeusGrid> {
         }
 
         final int snappedX = (vPos.dx / cellW).round().clamp(
-          math.max(0, s.initialX + s.initialW - (s.preview.maxW ?? s.initialX + s.initialW)),
+          math.max(
+            0,
+            s.initialX +
+                s.initialW -
+                (s.preview.maxW ?? s.initialX + s.initialW),
+          ),
           s.initialX + s.initialW - s.preview.minW,
         );
         p = p.copyWith(x: snappedX, w: s.initialX + s.initialW - snappedX);
@@ -379,13 +389,20 @@ class _ZeusGridState extends State<ZeusGrid> {
         final double rawH = s.initialH * cellH - deltaY;
 
         final double minH = s.preview.minH * cellH;
-        final double maxH = (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
+        final double maxH =
+            (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
 
         if (rawH < minH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - minH),
+          );
           vSize = Size(vSize.width, minH);
         } else if (rawH > maxH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - maxH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - maxH),
+          );
           vSize = Size(vSize.width, maxH);
         } else {
           vPos = Offset(vPos.dx, rawY.clamp(0, double.infinity));
@@ -393,13 +410,15 @@ class _ZeusGridState extends State<ZeusGrid> {
         }
 
         final int snappedY = (vPos.dy / cellH).round().clamp(
-          math.max(0, s.initialY + s.initialH - (s.preview.maxH ?? s.initialY + s.initialH)),
+          math.max(
+            0,
+            s.initialY +
+                s.initialH -
+                (s.preview.maxH ?? s.initialY + s.initialH),
+          ),
           s.initialY + s.initialH - s.preview.minH,
         );
-        p = p.copyWith(
-          y: snappedY,
-          h: s.initialY + s.initialH - snappedY,
-        );
+        p = p.copyWith(y: snappedY, h: s.initialY + s.initialH - snappedY);
         break;
       case ZeusHandle.bottomRight:
         final double deltaX = local.dx - s.initialGridX * cellW;
@@ -440,14 +459,24 @@ class _ZeusGridState extends State<ZeusGrid> {
         );
 
         final double minH = s.preview.minH * cellH;
-        final double maxH = (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
+        final double maxH =
+            (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
 
         if ((s.initialH * cellH - deltaY) < minH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - minH),
+          );
         } else if ((s.initialH * cellH - deltaY) > maxH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - maxH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - maxH),
+          );
         } else {
-          vPos = Offset(vPos.dx, (s.initialY * cellH + deltaY).clamp(0, double.infinity));
+          vPos = Offset(
+            vPos.dx,
+            (s.initialY * cellH + deltaY).clamp(0, double.infinity),
+          );
         }
 
         final int snappedW = (vSize.width / cellW).round().clamp(
@@ -455,48 +484,87 @@ class _ZeusGridState extends State<ZeusGrid> {
           (s.preview.maxW ?? (cols - s.initialX)).clamp(0, cols - s.initialX),
         );
         final int snappedY = (vPos.dy / cellH).round().clamp(
-          math.max(0, s.initialY + s.initialH - (s.preview.maxH ?? s.initialY + s.initialH)),
+          math.max(
+            0,
+            s.initialY +
+                s.initialH -
+                (s.preview.maxH ?? s.initialY + s.initialH),
+          ),
           s.initialY + s.initialH - s.preview.minH,
         );
-        p = p.copyWith(w: snappedW, y: snappedY, h: s.initialY + s.initialH - snappedY);
+        p = p.copyWith(
+          w: snappedW,
+          y: snappedY,
+          h: s.initialY + s.initialH - snappedY,
+        );
         break;
       case ZeusHandle.topLeft:
         final double deltaX = local.dx - s.initialGridX * cellW;
         final double deltaY = local.dy - s.initialGridY * cellH;
 
         final double minW = s.preview.minW * cellW;
-        final double maxW = (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
+        final double maxW =
+            (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
         final double minH = s.preview.minH * cellH;
-        final double maxH = (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
+        final double maxH =
+            (s.preview.maxH ?? (s.initialY + s.initialH)).toDouble() * cellH;
 
         if ((s.initialW * cellW - deltaX) < minW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - minW),
+            vPos.dy,
+          );
           vSize = Size(minW, vSize.height);
         } else if ((s.initialW * cellW - deltaX) > maxW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - maxW), vPos.dy);
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - maxW),
+            vPos.dy,
+          );
           vSize = Size(maxW, vSize.height);
         } else {
-          vPos = Offset((s.initialX * cellW + deltaX).clamp(0, double.infinity), vPos.dy);
+          vPos = Offset(
+            (s.initialX * cellW + deltaX).clamp(0, double.infinity),
+            vPos.dy,
+          );
           vSize = Size(s.initialW * cellW - deltaX, vSize.height);
         }
 
         if ((s.initialH * cellH - deltaY) < minH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - minH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - minH),
+          );
           vSize = Size(vSize.width, minH);
         } else if ((s.initialH * cellH - deltaY) > maxH) {
-          vPos = Offset(vPos.dx, s.initialY * cellH + (s.initialH * cellH - maxH));
+          vPos = Offset(
+            vPos.dx,
+            s.initialY * cellH + (s.initialH * cellH - maxH),
+          );
           vSize = Size(vSize.width, maxH);
         } else {
-          vPos = Offset(vPos.dx, (s.initialY * cellH + deltaY).clamp(0, double.infinity));
+          vPos = Offset(
+            vPos.dx,
+            (s.initialY * cellH + deltaY).clamp(0, double.infinity),
+          );
           vSize = Size(vSize.width, s.initialH * cellH - deltaY);
         }
 
         final int snappedX = (vPos.dx / cellW).round().clamp(
-          math.max(0, s.initialX + s.initialW - (s.preview.maxW ?? s.initialX + s.initialW)),
+          math.max(
+            0,
+            s.initialX +
+                s.initialW -
+                (s.preview.maxW ?? s.initialX + s.initialW),
+          ),
           s.initialX + s.initialW - s.preview.minW,
         );
         final int snappedY = (vPos.dy / cellH).round().clamp(
-          math.max(0, s.initialY + s.initialH - (s.preview.maxH ?? s.initialY + s.initialH)),
+          math.max(
+            0,
+            s.initialY +
+                s.initialH -
+                (s.preview.maxH ?? s.initialY + s.initialH),
+          ),
           s.initialY + s.initialH - s.preview.minH,
         );
         p = p.copyWith(
@@ -511,33 +579,73 @@ class _ZeusGridState extends State<ZeusGrid> {
         final double deltaY = local.dy - s.initialGridY * cellH;
 
         final double minW = s.preview.minW * cellW;
-        final double maxW = (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
+        final double maxW =
+            (s.preview.maxW ?? (s.initialX + s.initialW)).toDouble() * cellW;
 
         if ((s.initialW * cellW - deltaX) < minW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - minW), vPos.dy);
-          vSize = Size(minW, (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, (s.preview.maxH ?? rows).toDouble() * cellH));
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - minW),
+            vPos.dy,
+          );
+          vSize = Size(
+            minW,
+            (s.initialH * cellH + deltaY).clamp(
+              s.preview.minH * cellH,
+              (s.preview.maxH ?? rows).toDouble() * cellH,
+            ),
+          );
         } else if ((s.initialW * cellW - deltaX) > maxW) {
-          vPos = Offset(s.initialX * cellW + (s.initialW * cellW - maxW), vPos.dy);
-          vSize = Size(maxW, (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, (s.preview.maxH ?? rows).toDouble() * cellH));
+          vPos = Offset(
+            s.initialX * cellW + (s.initialW * cellW - maxW),
+            vPos.dy,
+          );
+          vSize = Size(
+            maxW,
+            (s.initialH * cellH + deltaY).clamp(
+              s.preview.minH * cellH,
+              (s.preview.maxH ?? rows).toDouble() * cellH,
+            ),
+          );
         } else {
-          vPos = Offset((s.initialX * cellW + deltaX).clamp(0, double.infinity), vPos.dy);
-          vSize = Size(s.initialW * cellW - deltaX, (s.initialH * cellH + deltaY).clamp(s.preview.minH * cellH, (s.preview.maxH ?? rows).toDouble() * cellH));
+          vPos = Offset(
+            (s.initialX * cellW + deltaX).clamp(0, double.infinity),
+            vPos.dy,
+          );
+          vSize = Size(
+            s.initialW * cellW - deltaX,
+            (s.initialH * cellH + deltaY).clamp(
+              s.preview.minH * cellH,
+              (s.preview.maxH ?? rows).toDouble() * cellH,
+            ),
+          );
         }
 
         final int snappedX = (vPos.dx / cellW).round().clamp(
-          math.max(0, s.initialX + s.initialW - (s.preview.maxW ?? s.initialX + s.initialW)),
+          math.max(
+            0,
+            s.initialX +
+                s.initialW -
+                (s.preview.maxW ?? s.initialX + s.initialW),
+          ),
           s.initialX + s.initialW - s.preview.minW,
         );
         final int snappedH = (vSize.height / cellH).round().clamp(
           s.preview.minH,
           (s.preview.maxH ?? (rows - s.initialY)).clamp(0, rows - s.initialY),
         );
-        p = p.copyWith(x: snappedX, w: s.initialX + s.initialW - snappedX, h: snappedH);
+        p = p.copyWith(
+          x: snappedX,
+          w: s.initialX + s.initialW - snappedX,
+          h: snappedH,
+        );
         break;
     }
 
     bool packingValid = s.isValid;
-    if (p.x != s.preview.x || p.y != s.preview.y || p.w != s.preview.w || p.h != s.preview.h) {
+    if (p.x != s.preview.x ||
+        p.y != s.preview.y ||
+        p.w != s.preview.w ||
+        p.h != s.preview.h) {
       if (widget.autoPack) {
         packingValid = _calculatePacking(p, cols, rows);
       }
@@ -564,7 +672,8 @@ class _ZeusGridState extends State<ZeusGrid> {
       // Check if mouse moved more than a few pixels from the start
       // Note: anchor might be offset for 'move' handle, but for resize it is the start point.
       // For simplicity, we can just check if grid coordinates changed.
-      hasMovedSignificantly = s.preview.x != s.initialX ||
+      hasMovedSignificantly =
+          s.preview.x != s.initialX ||
           s.preview.y != s.initialY ||
           s.preview.w != s.initialW ||
           s.preview.h != s.initialH;
@@ -577,7 +686,10 @@ class _ZeusGridState extends State<ZeusGrid> {
         // Find modules that moved during auto-packing and update them
         for (var m in _packedModules.value!) {
           final original = widget.modules.firstWhere((o) => o.id == m.id);
-          if (m.x != original.x || m.y != original.y || m.w != original.w || m.h != original.h) {
+          if (m.x != original.x ||
+              m.y != original.y ||
+              m.w != original.w ||
+              m.h != original.h) {
             widget.onModuleUpdate(m);
           }
         }
@@ -593,7 +705,7 @@ class _ZeusGridState extends State<ZeusGrid> {
 
     if (rb != null && localMouse != null) {
       final module = s.preview;
-      
+
       final cellW = widget.cellSide;
       final cellH = widget.cellSide;
 
@@ -767,8 +879,10 @@ class _ZeusGridState extends State<ZeusGrid> {
                       itemCount: widget.unplacedModules.length,
                       itemBuilder: (context, i) {
                         final m = widget.unplacedModules[i];
-                        final isDragged = session?.isFromDrawer == true && session?.id == m.id;
-                        
+                        final isDragged =
+                            session?.isFromDrawer == true &&
+                            session?.id == m.id;
+
                         if (isDragged) {
                           return const SizedBox.shrink();
                         }
@@ -819,7 +933,7 @@ class ZeusModuleWidget extends StatelessWidget {
   final ModuleStyle moduleStyle;
   final Widget content;
   final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
-      onStartSession;
+  onStartSession;
   final VoidCallback onRemove;
   final Function(String?) onFocusChange;
 
@@ -846,24 +960,27 @@ class ZeusModuleWidget extends StatelessWidget {
 
     final x = isActive ? session!.visualPosition.dx : m.x * cellW;
     final y = isActive ? session!.visualPosition.dy : m.y * cellH;
-    final double physicalW =
-        isActive ? session!.visualSize.width : (m.w * cellW);
-    final double physicalH =
-        isActive ? session!.visualSize.height : (m.h * cellH);
+    final double physicalW = isActive
+        ? session!.visualSize.width
+        : (m.w * cellW);
+    final double physicalH = isActive
+        ? session!.visualSize.height
+        : (m.h * cellH);
 
-    final hLen = (physicalW < (_kHandleLength * 3) ||
-            physicalH < (_kHandleLength * 3))
+    final hLen =
+        (physicalW < (_kHandleLength * 3) || physicalH < (_kHandleLength * 3))
         ? (physicalW < physicalH ? physicalW / 3 : physicalH / 3)
         : _kHandleLength;
-    final hitS = (physicalW < (_kHitAreaSize * 2) ||
-            physicalH < (_kHitAreaSize * 2))
+    final hitS =
+        (physicalW < (_kHitAreaSize * 2) || physicalH < (_kHitAreaSize * 2))
         ? (physicalW < physicalH ? physicalW / 2 : physicalH / 2)
         : _kHitAreaSize;
 
     return AnimatedPositioned(
       key: ValueKey('module_${m.id}'),
-      duration:
-          (session != null) ? Duration.zero : const Duration(milliseconds: 150),
+      duration: (session != null)
+          ? Duration.zero
+          : const Duration(milliseconds: 150),
       curve: Curves.easeOut,
       left: x,
       top: y,
@@ -907,7 +1024,8 @@ class ZeusModuleWidget extends StatelessWidget {
               if (isEditing && (isFocused || isActive)) ...[
                 _ResizeHandle(
                   handle: ZeusHandle.topLeft,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: _kHandleInset,
@@ -918,7 +1036,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.topRight,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - hLen,
                   top: _kHandleInset,
@@ -929,7 +1048,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.bottomRight,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - hLen,
                   top: physicalH - _kHandleInset - _kHandleThickness,
@@ -940,7 +1060,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.bottomLeft,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: physicalH - _kHandleInset - _kHandleThickness,
@@ -951,7 +1072,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.top,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
                   top: _kHandleInset,
@@ -962,7 +1084,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.bottom,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
                   top: physicalH - _kHandleInset - _kHandleThickness,
@@ -973,7 +1096,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.left,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: physicalH / 2 - (hLen / 2),
@@ -984,7 +1108,8 @@ class ZeusModuleWidget extends StatelessWidget {
                 ),
                 _ResizeHandle(
                   handle: ZeusHandle.right,
-                  onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  onStartSession: (e, h) =>
+                      onStartSession(m, e, false, handle: h),
                   builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - _kHandleThickness,
                   top: physicalH / 2 - (hLen / 2),
@@ -1043,18 +1168,16 @@ class _ModuleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final border = (isFocused || isActive)
         ? (isValid
-            ? moduleStyle.activeBorderColor
-            : moduleStyle.warningBorderColor)
+              ? moduleStyle.activeBorderColor
+              : moduleStyle.warningBorderColor)
         : Colors.white.withAlpha(26);
 
-    final Color effectiveBorder =
-        (isFocused || isActive) ? border : Colors.white.withAlpha(26);
+    final Color effectiveBorder = (isFocused || isActive)
+        ? border
+        : Colors.white.withAlpha(26);
 
     final bgColor = isActive
-        ? Color.alphaBlend(
-            border.withAlpha(50),
-            moduleStyle.color,
-          )
+        ? Color.alphaBlend(border.withAlpha(50), moduleStyle.color)
         : moduleStyle.color;
 
     return Opacity(
@@ -1069,7 +1192,9 @@ class _ModuleCard extends StatelessWidget {
             width: (isFocused || isActive) ? 2.0 : 1.0,
           ),
           borderRadius: moduleStyle.borderRadius,
-          boxShadow: isActive ? moduleStyle.activeShadow : moduleStyle.baseShadow,
+          boxShadow: isActive
+              ? moduleStyle.activeShadow
+              : moduleStyle.baseShadow,
         ),
         child: ClipRRect(
           borderRadius: moduleStyle.borderRadius,
@@ -1117,10 +1242,8 @@ class _ResizeHandle extends StatelessWidget {
     final hWidth = hitWidth ?? _kHitAreaSize;
     final hHeight = hitHeight ?? _kHitAreaSize;
 
-    final hLeft =
-        left != null ? left! - (hWidth - (width ?? 0)) / 2 : 0.0;
-    final hTop =
-        top != null ? top! - (hHeight - (height ?? 0)) / 2 : 0.0;
+    final hLeft = left != null ? left! - (hWidth - (width ?? 0)) / 2 : 0.0;
+    final hTop = top != null ? top! - (hHeight - (height ?? 0)) / 2 : 0.0;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -1254,7 +1377,7 @@ class _ModuleWrapper extends StatelessWidget {
   final ModuleStyle moduleStyle;
   final Widget content;
   final Function(ZeusModule, PointerDownEvent, bool, {ZeusHandle handle})
-      onStartSession;
+  onStartSession;
   final VoidCallback onRemove;
   final Function(String?) onFocusChange;
 

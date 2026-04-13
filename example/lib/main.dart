@@ -15,13 +15,37 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
 
   // 1. Modules currently displayed on the grid
   List<ZeusModule> myModules = [
-    const ZeusModule(id: 'module_a', x: 10, y: 10, w: 40, h: 30, minW: 20, minH: 15),
+    const ZeusModule(
+      id: 'module_a',
+      x: 10,
+      y: 10,
+      w: 40,
+      h: 30,
+      minW: 20,
+      minH: 15,
+    ),
   ];
 
   // 2. Modules waiting in the "Arsenal" side menu
   List<ZeusModule> myArsenal = [
-    const ZeusModule(id: 'module_b', x: 0, y: 0, w: 80, h: 30, minW: 40, minH: 20),
-    const ZeusModule(id: 'module_c', x: 0, y: 0, w: 30, h: 20, minW: 10, minH: 10),
+    const ZeusModule(
+      id: 'module_b',
+      x: 0,
+      y: 0,
+      w: 80,
+      h: 30,
+      minW: 40,
+      minH: 20,
+    ),
+    const ZeusModule(
+      id: 'module_c',
+      x: 0,
+      y: 0,
+      w: 30,
+      h: 20,
+      minW: 10,
+      minH: 10,
+    ),
   ];
 
   @override
@@ -37,7 +61,10 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
         actions: [
           Row(
             children: [
-              const Text("EDIT", style: TextStyle(fontSize: 10, color: Colors.white70)),
+              const Text(
+                "EDIT",
+                style: TextStyle(fontSize: 10, color: Colors.white70),
+              ),
               Switch(
                 value: _isEditing,
                 onChanged: (v) => setState(() => _isEditing = v),
@@ -53,7 +80,7 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
         autoPack: true,
         cellSide: 10.0, // Fixed grid size
         modules: myModules,
-        unplacedModules: myArsenal, 
+        unplacedModules: myArsenal,
         onGenerateContent: (id) => Container(
           color: Colors.blueGrey.withValues(alpha: 0.1),
           child: Center(
@@ -65,7 +92,9 @@ class _ZeusTestBenchState extends State<ZeusTestBench> {
         ),
 
         onModuleUpdate: (m) => setState(() {
-          final fromArsenalIndex = myArsenal.indexWhere((item) => item.id == m.id);
+          final fromArsenalIndex = myArsenal.indexWhere(
+            (item) => item.id == m.id,
+          );
           if (fromArsenalIndex != -1) {
             myArsenal.removeAt(fromArsenalIndex);
             myModules.add(m);

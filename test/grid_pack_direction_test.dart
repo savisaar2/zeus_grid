@@ -26,12 +26,14 @@ void main() {
   }
 
   group('Pack Direction Tests', () {
-    testWidgets('PackDirection.down should push modules downwards', (tester) async {
+    testWidgets('PackDirection.down should push modules downwards', (
+      tester,
+    ) async {
       List<ZeusModule> currentModules = [
         const ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10),
         const ZeusModule(id: 'm2', x: 0, y: 11, w: 10, h: 10),
       ];
-      
+
       await tester.pumpWidget(
         buildTestGrid(
           modules: currentModules,
@@ -55,7 +57,7 @@ void main() {
       await gesture.moveTo(centerOfM1);
       await gesture.down(centerOfM1);
       await tester.pump();
-      
+
       // Move m1 from (0,0) to (2,0) -> y=2.
       // m1 is now at y=2, h=10. Ends at y=12.
       // m2 is at y=11. Overlap!
@@ -69,12 +71,14 @@ void main() {
       expect(m2.y, 12);
     });
 
-    testWidgets('PackDirection.right should push modules to the right', (tester) async {
+    testWidgets('PackDirection.right should push modules to the right', (
+      tester,
+    ) async {
       List<ZeusModule> currentModules = [
         const ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10),
         const ZeusModule(id: 'm2', x: 11, y: 0, w: 10, h: 10),
       ];
-      
+
       await tester.pumpWidget(
         buildTestGrid(
           modules: currentModules,
@@ -113,7 +117,7 @@ void main() {
         const ZeusModule(id: 'm1', x: 0, y: 20, w: 10, h: 10),
         const ZeusModule(id: 'm2', x: 0, y: 15, w: 10, h: 10),
       ];
-      
+
       await tester.pumpWidget(
         buildTestGrid(
           modules: currentModules,
@@ -146,12 +150,14 @@ void main() {
       expect(m2.y, 8);
     });
 
-    testWidgets('PackDirection.left should push modules to the left', (tester) async {
+    testWidgets('PackDirection.left should push modules to the left', (
+      tester,
+    ) async {
       List<ZeusModule> currentModules = [
         const ZeusModule(id: 'm1', x: 20, y: 0, w: 10, h: 10),
         const ZeusModule(id: 'm2', x: 15, y: 0, w: 10, h: 10),
       ];
-      
+
       await tester.pumpWidget(
         buildTestGrid(
           modules: currentModules,
@@ -184,8 +190,10 @@ void main() {
       expect(m2.x, 8);
     });
 
-   group('Pack Direction Multi-Module Push Tests', () {
-      testWidgets('Should push multiple modules recursively (down)', (tester) async {
+    group('Pack Direction Multi-Module Push Tests', () {
+      testWidgets('Should push multiple modules recursively (down)', (
+        tester,
+      ) async {
         List<ZeusModule> currentModules = [
           const ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10),
           const ZeusModule(id: 'm2', x: 0, y: 11, w: 10, h: 10),
@@ -204,8 +212,12 @@ void main() {
         );
 
         await tester.pumpAndSettle();
-        final centerOfM1 = tester.getCenter(find.byKey(const Key('content_m1')));
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final centerOfM1 = tester.getCenter(
+          find.byKey(const Key('content_m1')),
+        );
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         await gesture.moveTo(centerOfM1);
         await gesture.down(centerOfM1);
@@ -218,14 +230,16 @@ void main() {
 
         final m2 = currentModules.firstWhere((m) => m.id == 'm2');
         final m3 = currentModules.firstWhere((m) => m.id == 'm3');
-        
+
         expect(m2.y, 12);
         expect(m3.y, 22); // Wait, m3 is at 22. m2 ends at 22. NO OVERLAP!
         // So m3 stays at 22. Correct.
       });
     });
-   group('Pack Direction Collision between Others', () {
-      testWidgets('m2 should push m3 when m1 pushes m2 into m3', (tester) async {
+    group('Pack Direction Collision between Others', () {
+      testWidgets('m2 should push m3 when m1 pushes m2 into m3', (
+        tester,
+      ) async {
         List<ZeusModule> currentModules = [
           const ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10),
           const ZeusModule(id: 'm2', x: 0, y: 11, w: 10, h: 10),
@@ -244,8 +258,12 @@ void main() {
         );
 
         await tester.pumpAndSettle();
-        final centerOfM1 = tester.getCenter(find.byKey(const Key('content_m1')));
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final centerOfM1 = tester.getCenter(
+          find.byKey(const Key('content_m1')),
+        );
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         await gesture.moveTo(centerOfM1);
         await gesture.down(centerOfM1);
@@ -259,7 +277,7 @@ void main() {
 
         final m2 = currentModules.firstWhere((m) => m.id == 'm2');
         final m3 = currentModules.firstWhere((m) => m.id == 'm3');
-        
+
         expect(m2.y, 12);
         expect(m3.y, 22);
       });

@@ -17,10 +17,7 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Draw Background
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = style.backgroundColor,
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = style.backgroundColor);
 
     if (!style.showGrid) return;
 

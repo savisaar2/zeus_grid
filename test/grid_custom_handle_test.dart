@@ -4,9 +4,11 @@ import 'package:zeus_grid/zeus_grid.dart';
 import 'dart:ui';
 
 void main() {
-  testWidgets('Custom Resize Handle: should render custom widget if provided', (WidgetTester tester) async {
+  testWidgets('Custom Resize Handle: should render custom widget if provided', (
+    WidgetTester tester,
+  ) async {
     final module = ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10);
-    
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
