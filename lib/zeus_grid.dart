@@ -195,6 +195,7 @@ class _ZeusGridState extends State<ZeusGrid> {
   }
 
   Widget _buildGhost(ZeusModule m, bool isValid, double cellW, double cellH) {
+    final color = isValid ? Colors.cyanAccent : Colors.redAccent;
     return Positioned(
       left: m.x * cellW,
       top: m.y * cellH,
@@ -203,8 +204,9 @@ class _ZeusGridState extends State<ZeusGrid> {
       child: RepaintBoundary(
         child: Container(
           decoration: BoxDecoration(
+            color: color.withAlpha(20),
             border: Border.all(
-              color: isValid ? Colors.cyanAccent.withAlpha(100) : Colors.redAccent.withAlpha(100),
+              color: color.withAlpha(100),
               width: 2,
             ),
             borderRadius: widget.moduleStyle.borderRadius,
@@ -289,7 +291,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         local.dy >= -40 &&
         local.dy <= (rb.size.height + 40);
 
-    if (widget.isEditing) {
+    if (widget.isEditing && s.isFromDrawer) {
       // Must be significantly over the arsenal drawer to trigger removal (e.g. 100px in)
       if (local.dx >= (rb.size.width - widget.menuStyle.width + 100)) {
         overGrid = false;
