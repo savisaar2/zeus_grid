@@ -140,6 +140,7 @@ class _ZeusGridState extends State<ZeusGrid> {
                 style: widget.gridStyle,
                 cellW: cellW,
                 cellH: cellH,
+                spacing: spacing,
                 rows: rows,
                 cols: cols,
               ),
@@ -1230,6 +1231,7 @@ class ZeusGridBackground extends StatelessWidget {
   final GridStyle style;
   final double cellW;
   final double cellH;
+  final double spacing;
   final int rows;
   final int cols;
 
@@ -1238,6 +1240,7 @@ class ZeusGridBackground extends StatelessWidget {
     required this.style,
     required this.cellW,
     required this.cellH,
+    required this.spacing,
     required this.rows,
     required this.cols,
   });
@@ -1250,6 +1253,7 @@ class ZeusGridBackground extends StatelessWidget {
           style: style,
           cellW: cellW,
           cellH: cellH,
+          spacing: spacing,
           rows: rows,
           cols: cols,
         ),
