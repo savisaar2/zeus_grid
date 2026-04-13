@@ -916,6 +916,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.topLeft,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: _kHandleInset,
                   width: hLen,
@@ -926,6 +927,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.topRight,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - hLen,
                   top: _kHandleInset,
                   width: hLen,
@@ -936,6 +938,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.bottomRight,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - hLen,
                   top: physicalH - _kHandleInset - _kHandleThickness,
                   width: hLen,
@@ -946,6 +949,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.bottomLeft,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: physicalH - _kHandleInset - _kHandleThickness,
                   width: hLen,
@@ -956,6 +960,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.top,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
                   top: _kHandleInset,
                   width: hLen,
@@ -966,6 +971,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.bottom,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW / 2 - (hLen / 2),
                   top: physicalH - _kHandleInset - _kHandleThickness,
                   width: hLen,
@@ -976,6 +982,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.left,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: _kHandleInset,
                   top: physicalH / 2 - (hLen / 2),
                   width: _kHandleThickness,
@@ -986,6 +993,7 @@ class ZeusModuleWidget extends StatelessWidget {
                 _ResizeHandle(
                   handle: ZeusHandle.right,
                   onStartSession: (e, h) => onStartSession(m, e, false, handle: h),
+                  builder: moduleStyle.resizeHandleBuilder,
                   left: physicalW - _kHandleInset - _kHandleThickness,
                   top: physicalH / 2 - (hLen / 2),
                   width: _kHandleThickness,
@@ -1083,11 +1091,13 @@ class _ModuleCard extends StatelessWidget {
 class _ResizeHandle extends StatelessWidget {
   final ZeusHandle handle;
   final Function(PointerDownEvent, ZeusHandle) onStartSession;
+  final Widget Function(ZeusHandle direction)? builder;
   final double? left, top, width, height, hitWidth, hitHeight;
 
   const _ResizeHandle({
     required this.handle,
     required this.onStartSession,
+    this.builder,
     this.left,
     this.top,
     this.width,
@@ -1098,8 +1108,23 @@ class _ResizeHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (builder != null) {
+      return Positioned(
+        left: left,
+        top: top,
+        width: width,
+        height: height,
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (e) => onStartSession(e, handle),
+          child: builder!(handle),
+        ),
+      );
+    }
+
     final hWidth = hitWidth ?? _kHitAreaSize;
     final hHeight = hitHeight ?? _kHitAreaSize;
+// ... (rest of old implementation)
 
     final hLeft =
         left != null ? left! - (hWidth - (width ?? 0)) / 2 : 0.0;
