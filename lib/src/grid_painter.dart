@@ -4,14 +4,12 @@ import 'models.dart';
 class GridPainter extends CustomPainter {
   final GridStyle style;
   final double cellW, cellH;
-  final double spacing;
   final int rows, cols;
 
   GridPainter({
     required this.style,
     required this.cellW,
     required this.cellH,
-    required this.spacing,
     required this.rows,
     required this.cols,
   });
@@ -57,34 +55,12 @@ class GridPainter extends CustomPainter {
       if (i == rows) y = size.height;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-
-    // 4. Draw Spacing Visualization (if spacing > 0)
-    if (spacing > 0) {
-      final cellPaint = Paint()
-        ..color = style.lineColor.withAlpha(20)
-        ..style = PaintingStyle.fill;
-
-      for (int c = 0; c < cols; c++) {
-        for (int r = 0; r < rows; r++) {
-          final rect = Rect.fromLTWH(
-            c * cellW + spacing / 2,
-            r * cellH + spacing / 2,
-            cellW - spacing,
-            cellH - spacing,
-          );
-          if (rect.right <= size.width && rect.bottom <= size.height) {
-            canvas.drawRect(rect, cellPaint);
-          }
-        }
-      }
-    }
   }
 
   @override
   bool shouldRepaint(covariant GridPainter oldDelegate) {
     return oldDelegate.style != style ||
         oldDelegate.cellW != cellW ||
-        oldDelegate.cellH != cellH ||
-        oldDelegate.spacing != spacing;
+        oldDelegate.cellH != cellH;
   }
 }
