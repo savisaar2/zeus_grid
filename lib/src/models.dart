@@ -9,6 +9,8 @@ class ZeusModule {
   final int h;
   final int minW;
   final int minH;
+  final int? maxW;
+  final int? maxH;
 
   const ZeusModule({
     required this.id,
@@ -18,10 +20,21 @@ class ZeusModule {
     required this.h,
     this.minW = 1,
     this.minH = 1,
+    this.maxW,
+    this.maxH,
   });
 
   // 🎯 The "Professional" way to update models in Flutter
-  ZeusModule copyWith({int? x, int? y, int? w, int? h, int? minW, int? minH}) {
+  ZeusModule copyWith({
+    int? x,
+    int? y,
+    int? w,
+    int? h,
+    int? minW,
+    int? minH,
+    int? maxW,
+    int? maxH,
+  }) {
     return ZeusModule(
       id: id,
       x: x ?? this.x,
@@ -30,6 +43,8 @@ class ZeusModule {
       h: h ?? this.h,
       minW: minW ?? this.minW,
       minH: minH ?? this.minH,
+      maxW: maxW ?? this.maxW,
+      maxH: maxH ?? this.maxH,
     );
   }
 
@@ -44,6 +59,8 @@ class ZeusModule {
         'h': h,
         'minW': minW,
         'minH': minH,
+        'maxW': maxW,
+        'maxH': maxH,
       };
 
   factory ZeusModule.fromJson(Map<String, dynamic> json) => ZeusModule(
@@ -54,6 +71,8 @@ class ZeusModule {
         h: json['h'] as int,
         minW: (json['minW'] ?? 1) as int,
         minH: (json['minH'] ?? 1) as int,
+        maxW: json['maxW'] as int?,
+        maxH: json['maxH'] as int?,
       );
 }
 
