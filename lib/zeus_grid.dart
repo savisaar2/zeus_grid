@@ -16,6 +16,7 @@ class ZeusGrid extends StatefulWidget {
   final ZeusMenuStyle menuStyle;
   final double cellSide;
   final bool autoPack;
+  final PackDirection packDirection;
 
   const ZeusGrid({
     super.key,
@@ -30,6 +31,7 @@ class ZeusGrid extends StatefulWidget {
     this.menuStyle = const ZeusMenuStyle(),
     this.cellSide = 10.0,
     this.autoPack = false,
+    this.packDirection = PackDirection.down,
   });
 
   @override
@@ -547,7 +549,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     bool packingValid = s.isValid;
     if (p.x != s.preview.x || p.y != s.preview.y || p.w != s.preview.w || p.h != s.preview.h) {
       if (widget.autoPack) {
-        packingValid = _calculatePacking(p, rows);
+        packingValid = _calculatePacking(p, cols, rows);
       }
     }
 
@@ -636,7 +638,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         (a.y + a.h) > b.y;
   }
 
-  bool _calculatePacking(ZeusModule active, int maxRows) {
+  bool _calculatePacking(ZeusModule active, int maxCols, int maxRows) {
     if (!widget.autoPack) return true;
 
     final others = widget.modules.where((m) => m.id != active.id).toList();
@@ -651,23 +653,84 @@ class _ZeusGridState extends State<ZeusGrid> {
       for (int i = 0; i < packed.length; i++) {
         var m = packed[i];
         if (_checkCollisionBetween(active, m)) {
-          final newY = active.y + active.h;
-          if (newY + m.h > maxRows) return false; // Boundary violation
-          packed[i] = m.copyWith(y: newY);
+          ZeusModule newM;
+          switch (widget.packDirection) {
+            case PackDirection.down:
+              final newY = active.y + active.h;
+              if (newY + m.h > maxRows) return false;
+              newM = m.copyWith(y: newY);
+              break;
+            case PackDirection.up:
+              final newY = active.y - m.h;
+              if (newY < 0) return false;
+              newM = m.copyWith(y: newY);
+              break;
+            case PackDirection.right:
+              final newX = active.x + active.w;
+              if (newX + m.w > maxCols) return false;
+              newM = m.copyWith(x: newX);
+              break;
+            case PackDirection.left:
+              final newX = active.x - m.w;
+              if (newX < 0) return false;
+              newM = m.copyWith(x: newX);
+              break;
+          }
+          packed[i] = newM;
           changed = true;
         }
 
         for (int j = 0; j < packed.length; j++) {
           if (i == j) continue;
           if (_checkCollisionBetween(packed[i], packed[j])) {
-            if (packed[i].y >= packed[j].y) {
-              final newY = packed[j].y + packed[j].h;
-              if (newY + packed[i].h > maxRows) return false; // Boundary violation
-              packed[i] = packed[i].copyWith(y: newY);
-            } else {
-              final newY = packed[i].y + packed[i].h;
-              if (newY + packed[j].h > maxRows) return false; // Boundary violation
-              packed[j] = packed[j].copyWith(y: newY);
+            ZeusModule m1 = packed[i];
+            ZeusModule m2 = packed[j];
+
+            switch (widget.packDirection) {
+              case PackDirection.down:
+                if (m1.y >= m2.y) {
+                  final newY = m2.y + m2.h;
+                  if (newY + m1.h > maxRows) return false;
+                  packed[i] = m1.copyWith(y: newY);
+                } else {
+                  final newY = m1.y + m1.h;
+                  if (newY + m2.h > maxRows) return false;
+                  packed[j] = m2.copyWith(y: newY);
+                }
+                break;
+              case PackDirection.up:
+                if (m1.y <= m2.y) {
+                  final newY = m2.y - m1.h;
+                  if (newY < 0) return false;
+                  packed[i] = m1.copyWith(y: newY);
+                } else {
+                  final newY = m1.y - m2.h;
+                  if (newY < 0) return false;
+                  packed[j] = m2.copyWith(y: newY);
+                }
+                break;
+              case PackDirection.right:
+                if (m1.x >= m2.x) {
+                  final newX = m2.x + m2.w;
+                  if (newX + m1.w > maxCols) return false;
+                  packed[i] = m1.copyWith(x: newX);
+                } else {
+                  final newX = m1.x + m1.w;
+                  if (newX + m2.w > maxCols) return false;
+                  packed[j] = m2.copyWith(x: newX);
+                }
+                break;
+              case PackDirection.left:
+                if (m1.x <= m2.x) {
+                  final newX = m2.x - m1.w;
+                  if (newX < 0) return false;
+                  packed[i] = m1.copyWith(x: newX);
+                } else {
+                  final newX = m1.x - m2.w;
+                  if (newX < 0) return false;
+                  packed[j] = m2.copyWith(x: newX);
+                }
+                break;
             }
             changed = true;
           }

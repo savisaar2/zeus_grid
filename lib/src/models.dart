@@ -88,6 +88,13 @@ enum ZeusHandle {
   bottomRight,
 }
 
+enum PackDirection {
+  up,
+  down,
+  left,
+  right,
+}
+
 class ZeusSession {
   final String id;
   final ZeusModule preview;
