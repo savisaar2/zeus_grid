@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zeus_grid/zeus_grid.dart';
+import 'dart:ui';
 
 void main() {
   testWidgets('Custom Resize Handle: should render custom widget if provided', (WidgetTester tester) async {
@@ -31,9 +32,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Trigger focus to show handles
+    // Trigger focus via hover
     final center = tester.getCenter(find.byType(ZeusModuleWidget));
-    await tester.tapAt(center);
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    await gesture.moveTo(center);
     await tester.pumpAndSettle();
 
     // Check if custom handles are present
