@@ -1,3 +1,12 @@
+## 1.2.0 - Responsive & Performance Update
+
+* **New Feature: Responsive Columns** - Added `columns` parameter to `ZeusGrid`. When set, the grid automatically calculates cell dimensions based on available width, allowing for responsive column-based layouts (e.g., a "4-column grid") that adapt to window resizing.
+* **Performance: ValueNotifier Architecture** - Refactored `_focusedModuleId` and active sessions to use `ValueNotifier` and `ValueListenableBuilder`. This enables surgical rebuilds of only the affected modules, significantly reducing the overhead on the main widget tree during hover and drag operations.
+* **UX: Explicit Arsenal Docking** - Improved module removal logic. Modules now only return to the Arsenal when explicitly dragged over the sidebar.
+* **UX: Edge Snapping** - Dragging a module outside the window bounds (anywhere except the sidebar) now correctly snaps it to the last valid edge position instead of removing it.
+* **Stability: Resource Management** - Implemented `dispose()` method in `ZeusGrid` state to properly cleanup all internal notifiers, preventing potential memory leaks in complex applications.
+* **Fix: Out-of-bounds Resizing** - Fixed a bug where resizing a module past the window edge would cause it to be incorrectly removed from the grid.
+
 ## 1.1.0 - Tactical Expansion
 
 * **New Feature: Max Constraints** - Added `maxW` and `maxH` to `ZeusModule`. Dashboards can now enforce maximum sizes for widgets.

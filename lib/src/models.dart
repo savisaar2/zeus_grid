@@ -98,6 +98,7 @@ class ZeusSession {
   final bool isValid;
   final bool isFromDrawer;
   final bool isOverGrid;
+  final bool isOverArsenal;
   final int initialGridX;
   final int initialGridY;
   final int initialW;
@@ -115,6 +116,7 @@ class ZeusSession {
     this.isValid = true,
     this.isFromDrawer = false,
     this.isOverGrid = false,
+    this.isOverArsenal = false,
     this.initialGridX = 0,
     this.initialGridY = 0,
     this.initialW = 0,
@@ -128,6 +130,7 @@ class ZeusSession {
   ZeusSession copyWith({
     ZeusModule? preview,
     bool? isOverGrid,
+    bool? isOverArsenal,
     bool? isValid,
     Offset? visualPosition,
     Size? visualSize,
@@ -139,6 +142,7 @@ class ZeusSession {
       handle: handle,
       isFromDrawer: isFromDrawer,
       isOverGrid: isOverGrid ?? this.isOverGrid,
+      isOverArsenal: isOverArsenal ?? this.isOverArsenal,
       isValid: isValid ?? this.isValid,
       initialGridX: initialGridX,
       initialGridY: initialGridY,

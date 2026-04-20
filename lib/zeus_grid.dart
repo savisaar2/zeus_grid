@@ -16,6 +16,7 @@ class ZeusGrid extends StatefulWidget {
   final ModuleStyle moduleStyle;
   final ZeusMenuStyle menuStyle;
   final double cellSide;
+  final int? columns;
   final bool autoPack;
   final PackDirection packDirection;
 
@@ -32,6 +33,7 @@ class ZeusGrid extends StatefulWidget {
     this.moduleStyle = const ModuleStyle(),
     this.menuStyle = const ZeusMenuStyle(),
     this.cellSide = 10.0,
+    this.columns,
     this.autoPack = false,
     this.packDirection = PackDirection.down,
   });
@@ -50,9 +52,17 @@ class _ZeusGridState extends State<ZeusGrid> {
   final ValueNotifier<ZeusSession?> _activeSession = ValueNotifier(null);
   final ValueNotifier<String?> _activeSessionId = ValueNotifier(null);
   final ValueNotifier<List<ZeusModule>?> _packedModules = ValueNotifier(null);
-  String? _focusedModuleId;
+  final ValueNotifier<String?> _focusedModuleId = ValueNotifier(null);
   Offset? _lastMousePosition;
   Size? _lastSize;
+
+  @override
+  void dispose() {
+    _activeSession.dispose();
+    _activeSessionId.dispose();
+    _packedModules.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +79,11 @@ class _ZeusGridState extends State<ZeusGrid> {
         }
         _lastSize = size;
 
-        final cellW = widget.cellSide;
-        final cellH = widget.cellSide;
+        final double cellW = widget.columns != null ? constraints.maxWidth / widget.columns! : widget.cellSide;
+        final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
-        final cols = (constraints.maxWidth / widget.cellSide).floor();
-        final rows = (constraints.maxHeight / widget.cellSide).floor();
+        final cols = widget.columns ?? (constraints.maxWidth / widget.cellSide).floor();
+        final rows = (constraints.maxHeight / cellH).floor();
 
         return Listener(
           behavior: HitTestBehavior.translucent,
@@ -97,11 +107,17 @@ class _ZeusGridState extends State<ZeusGrid> {
   }
 
   void _pushModulesIntoBounds(Size size, Size oldSize) {
-    final cols = (size.width / widget.cellSide).floor();
-    final rows = (size.height / widget.cellSide).floor();
+    final double cellW = widget.columns != null ? size.width / widget.columns! : widget.cellSide;
+    final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
-    final lastCols = (oldSize.width / widget.cellSide).floor();
-    final lastRows = (oldSize.height / widget.cellSide).floor();
+    final cols = widget.columns ?? (size.width / widget.cellSide).floor();
+    final rows = (size.height / cellH).floor();
+
+    final double oldCellW = widget.columns != null ? oldSize.width / widget.columns! : widget.cellSide;
+    final double oldCellH = widget.columns != null ? oldCellW : widget.cellSide;
+
+    final lastCols = widget.columns ?? (oldSize.width / widget.cellSide).floor();
+    final lastRows = (oldSize.height / oldCellH).floor();
 
     // Optimization: only push if bounds shrank
     if (cols >= lastCols && rows >= lastRows) return;
@@ -143,21 +159,26 @@ class _ZeusGridState extends State<ZeusGrid> {
               ),
             ),
           ...widget.modules.map((m) {
-            return _ModuleWrapper(
-              key: ValueKey('module_wrapper_${m.id}'),
-              initialModule: m,
-              activeSessionId: _activeSessionId,
-              activeSession: _activeSession,
-              packedModules: _packedModules,
-              isEditing: widget.isEditing,
-              isFocused: widget.isEditing && _focusedModuleId == m.id,
-              cellW: cellW,
-              cellH: cellH,
-              moduleStyle: widget.moduleStyle,
-              content: widget.onGenerateContent(m.id),
-              onStartSession: _startSession,
-              onRemove: () => widget.onModuleRemove(m.id),
-              onFocusChange: (id) => setState(() => _focusedModuleId = id),
+            return ValueListenableBuilder<String?>(
+              valueListenable: _focusedModuleId,
+              builder: (context, focusedId, _) {
+                return _ModuleWrapper(
+                  key: ValueKey('module_wrapper_${m.id}'),
+                  initialModule: m,
+                  activeSessionId: _activeSessionId,
+                  activeSession: _activeSession,
+                  packedModules: _packedModules,
+                  isEditing: widget.isEditing,
+                  isFocused: widget.isEditing && focusedId == m.id,
+                  cellW: cellW,
+                  cellH: cellH,
+                  moduleStyle: widget.moduleStyle,
+                  content: widget.onGenerateContent(m.id),
+                  onStartSession: _startSession,
+                  onRemove: () => widget.onModuleRemove(m.id),
+                  onFocusChange: (id) => _focusedModuleId.value = id,
+                );
+              },
             );
           }),
           // Active module ghost and smooth preview
@@ -190,7 +211,7 @@ class _ZeusGridState extends State<ZeusGrid> {
                     onStartSession: _startSession,
                     onRemove: () => widget.onModuleRemove(session.id),
                     onFocusChange: (id) =>
-                        setState(() => _focusedModuleId = id),
+                        _focusedModuleId.value = id,
                   ),
                 ],
               );
@@ -229,8 +250,8 @@ class _ZeusGridState extends State<ZeusGrid> {
     final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
 
-    final cellW = widget.cellSide;
-    final cellH = widget.cellSide;
+    final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+    final double cellH = widget.columns != null ? cellW : widget.cellSide;
     final local = rb.globalToLocal(e.position);
 
     final double visualW = (m.w * cellW).clamp(m.minW * cellW, double.infinity);
@@ -270,7 +291,7 @@ class _ZeusGridState extends State<ZeusGrid> {
       visualSize: Size(visualW, visualH),
     );
     _activeSessionId.value = m.id;
-    _focusedModuleId = m.id;
+    _focusedModuleId.value = m.id;
     _lastMousePosition = rb.globalToLocal(e.position);
   }
 
@@ -280,11 +301,11 @@ class _ZeusGridState extends State<ZeusGrid> {
     final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
 
-    final cellW = widget.cellSide;
-    final cellH = widget.cellSide;
+    final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+    final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
-    final cols = (rb.size.width / widget.cellSide).floor();
-    final rows = (rb.size.height / widget.cellSide).floor();
+    final cols = widget.columns ?? (rb.size.width / widget.cellSide).floor();
+    final rows = (rb.size.height / cellH).floor();
 
     final local = rb.globalToLocal(e.position);
     _lastMousePosition = local;
@@ -294,6 +315,13 @@ class _ZeusGridState extends State<ZeusGrid> {
         local.dx <= (rb.size.width + 40) &&
         local.dy >= -40 &&
         local.dy <= (rb.size.height + 40);
+
+    bool isOverArsenal = false;
+    if (widget.isEditing) {
+      if (local.dx >= (rb.size.width - widget.menuStyle.width)) {
+        isOverArsenal = true;
+      }
+    }
 
     if (widget.isEditing && s.isFromDrawer) {
       // Must be significantly over the arsenal drawer to trigger removal (e.g. 100px in)
@@ -654,6 +682,7 @@ class _ZeusGridState extends State<ZeusGrid> {
     _activeSession.value = s.copyWith(
       preview: p,
       isOverGrid: overGrid,
+      isOverArsenal: isOverArsenal,
       isValid: packingValid && !_collision(p),
       visualPosition: vPos,
       visualSize: vSize,
@@ -679,9 +708,13 @@ class _ZeusGridState extends State<ZeusGrid> {
           s.preview.h != s.initialH;
     }
 
-    if (!s.isFromDrawer && !s.isOverGrid && hasMovedSignificantly) {
+    if (!s.isFromDrawer &&
+        s.isOverArsenal &&
+        hasMovedSignificantly &&
+        s.handle == ZeusHandle.move) {
       widget.onModuleRemove(s.id);
-    } else if (s.isValid && s.isOverGrid) {
+    } else if (s.isValid) {
+      // Prioritize snapping to ghost location (clamped position)
       if (widget.autoPack && _packedModules.value != null) {
         // Find modules that moved during auto-packing and update them
         for (var m in _packedModules.value!) {
@@ -706,8 +739,8 @@ class _ZeusGridState extends State<ZeusGrid> {
     if (rb != null && localMouse != null) {
       final module = s.preview;
 
-      final cellW = widget.cellSide;
-      final cellH = widget.cellSide;
+      final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+      final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
       final left = module.x * cellW;
       final top = module.y * cellH;
@@ -718,10 +751,10 @@ class _ZeusGridState extends State<ZeusGrid> {
           localMouse.dx <= right &&
           localMouse.dy >= top &&
           localMouse.dy <= bottom) {
-        _focusedModuleId = s.id;
+        _focusedModuleId.value = s.id;
       }
-    }
-    _lastMousePosition = null;
+      }
+      _lastMousePosition = null;
   }
 
   bool _collision(ZeusModule t) {
