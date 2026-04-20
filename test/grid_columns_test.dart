@@ -3,14 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zeus_grid/zeus_grid.dart';
 
 void main() {
-  testWidgets('ZeusGrid uses columns property to determine cell dimensions', (tester) async {
+  testWidgets('ZeusGrid uses columns property to determine cell dimensions', (
+    tester,
+  ) async {
     const double gridWidth = 400.0;
     const double gridHeight = 400.0;
     const int numColumns = 4;
 
-    final modules = [
-      const ZeusModule(id: 'm1', x: 0, y: 0, w: 1, h: 1),
-    ];
+    final modules = [const ZeusModule(id: 'm1', x: 0, y: 0, w: 1, h: 1)];
 
     await tester.pumpWidget(
       MaterialApp(

@@ -48,10 +48,7 @@ void main() {
 
       // Ghost should still be visible because overGrid remains true for existing modules
       // while hovering arsenal (to provide feedback).
-      expect(
-        find.byType(ZeusModuleWidget),
-        findsNWidgets(1),
-      ); 
+      expect(find.byType(ZeusModuleWidget), findsNWidgets(1));
 
       expect(
         find.byType(Container).evaluate().any((e) {

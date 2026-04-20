@@ -79,10 +79,13 @@ class _ZeusGridState extends State<ZeusGrid> {
         }
         _lastSize = size;
 
-        final double cellW = widget.columns != null ? constraints.maxWidth / widget.columns! : widget.cellSide;
+        final double cellW = widget.columns != null
+            ? constraints.maxWidth / widget.columns!
+            : widget.cellSide;
         final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
-        final cols = widget.columns ?? (constraints.maxWidth / widget.cellSide).floor();
+        final cols =
+            widget.columns ?? (constraints.maxWidth / widget.cellSide).floor();
         final rows = (constraints.maxHeight / cellH).floor();
 
         return Listener(
@@ -107,16 +110,21 @@ class _ZeusGridState extends State<ZeusGrid> {
   }
 
   void _pushModulesIntoBounds(Size size, Size oldSize) {
-    final double cellW = widget.columns != null ? size.width / widget.columns! : widget.cellSide;
+    final double cellW = widget.columns != null
+        ? size.width / widget.columns!
+        : widget.cellSide;
     final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
     final cols = widget.columns ?? (size.width / widget.cellSide).floor();
     final rows = (size.height / cellH).floor();
 
-    final double oldCellW = widget.columns != null ? oldSize.width / widget.columns! : widget.cellSide;
+    final double oldCellW = widget.columns != null
+        ? oldSize.width / widget.columns!
+        : widget.cellSide;
     final double oldCellH = widget.columns != null ? oldCellW : widget.cellSide;
 
-    final lastCols = widget.columns ?? (oldSize.width / widget.cellSide).floor();
+    final lastCols =
+        widget.columns ?? (oldSize.width / widget.cellSide).floor();
     final lastRows = (oldSize.height / oldCellH).floor();
 
     // Optimization: only push if bounds shrank
@@ -210,8 +218,7 @@ class _ZeusGridState extends State<ZeusGrid> {
                     content: widget.onGenerateContent(session.id),
                     onStartSession: _startSession,
                     onRemove: () => widget.onModuleRemove(session.id),
-                    onFocusChange: (id) =>
-                        _focusedModuleId.value = id,
+                    onFocusChange: (id) => _focusedModuleId.value = id,
                   ),
                 ],
               );
@@ -250,7 +257,9 @@ class _ZeusGridState extends State<ZeusGrid> {
     final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
 
-    final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+    final double cellW = widget.columns != null
+        ? rb.size.width / widget.columns!
+        : widget.cellSide;
     final double cellH = widget.columns != null ? cellW : widget.cellSide;
     final local = rb.globalToLocal(e.position);
 
@@ -301,7 +310,9 @@ class _ZeusGridState extends State<ZeusGrid> {
     final rb = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
 
-    final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+    final double cellW = widget.columns != null
+        ? rb.size.width / widget.columns!
+        : widget.cellSide;
     final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
     final cols = widget.columns ?? (rb.size.width / widget.cellSide).floor();
@@ -326,7 +337,7 @@ class _ZeusGridState extends State<ZeusGrid> {
         local.dy >= -40 &&
         local.dy <= (rb.size.height + 40);
 
-    // If it's an existing module, we consider it "over grid" even if over arsenal 
+    // If it's an existing module, we consider it "over grid" even if over arsenal
     // so that the ghost remains visible at the edge.
     if (isOverArsenal && !s.isFromDrawer) {
       overGrid = true;
@@ -748,7 +759,9 @@ class _ZeusGridState extends State<ZeusGrid> {
     if (rb != null && localMouse != null) {
       final module = s.preview;
 
-      final double cellW = widget.columns != null ? rb.size.width / widget.columns! : widget.cellSide;
+      final double cellW = widget.columns != null
+          ? rb.size.width / widget.columns!
+          : widget.cellSide;
       final double cellH = widget.columns != null ? cellW : widget.cellSide;
 
       final left = module.x * cellW;
@@ -762,8 +775,8 @@ class _ZeusGridState extends State<ZeusGrid> {
           localMouse.dy <= bottom) {
         _focusedModuleId.value = s.id;
       }
-      }
-      _lastMousePosition = null;
+    }
+    _lastMousePosition = null;
   }
 
   bool _collision(ZeusModule t) {
