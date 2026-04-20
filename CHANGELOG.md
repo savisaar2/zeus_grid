@@ -1,3 +1,9 @@
+## 1.2.1 - UX Refinement
+
+* **Fix: Intentional Docking** - Refined the module removal logic to distinguish between "outside the window" (snaps back to edge) and "inside the Arsenal" (docks/removes).
+* **UX: Persistent Ghosting** - Existing modules now keep their ghost preview visible even when hovering the Arsenal, providing better feedback before release.
+* **Fix: Tests** - Updated `grid_arsenal_hover_test` to match the new intentional docking behavior.
+
 ## 1.2.0 - Responsive & Performance Update
 
 * **New Feature: Responsive Columns** - Added `columns` parameter to `ZeusGrid`. When set, the grid automatically calculates cell dimensions based on available width, allowing for responsive column-based layouts (e.g., a "4-column grid") that adapt to window resizing.

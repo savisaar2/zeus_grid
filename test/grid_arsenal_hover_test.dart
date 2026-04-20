@@ -5,7 +5,7 @@ import 'dart:ui';
 
 void main() {
   testWidgets(
-    'Arsenal Hover: dragging existing module over arsenal should NOT set overGrid to false',
+    'Arsenal Hover: dragging existing module over arsenal SHOULD set isOverArsenal to true and remove on release',
     (tester) async {
       bool removed = false;
       final modules = [const ZeusModule(id: 'm1', x: 0, y: 0, w: 10, h: 10)];
@@ -46,18 +46,13 @@ void main() {
       await gesture.moveTo(const Offset(950, 500));
       await tester.pump();
 
-      // If overGrid is false, the ghost should disappear.
-      // The ValueListenableBuilder for _activeSession returns SizedBox.shrink() if !session.isOverGrid.
+      // Ghost should still be visible because overGrid remains true for existing modules
+      // while hovering arsenal (to provide feedback).
       expect(
         find.byType(ZeusModuleWidget),
         findsNWidgets(1),
-      ); // Only the static one?
-      // Wait, the active one is also a ZeusModuleWidget.
-      // If session.isOverGrid is true, we should have 2 ZeusModuleWidgets (one static hidden by wrapper, one active).
-      // Actually _ModuleWrapper returns SizedBox.shrink() if isCurrentlyActive.
-      // So there should be exactly 1 ZeusModuleWidget visible (the active one).
+      ); 
 
-      // Let's check for the ghost container instead.
       expect(
         find.byType(Container).evaluate().any((e) {
           final container = e.widget as Container;
@@ -73,9 +68,9 @@ void main() {
 
       expect(
         removed,
-        isFalse,
+        isTrue,
         reason:
-            'Module should not be removed when hovering arsenal during drag',
+            'Module SHOULD be removed when released well inside arsenal during drag',
       );
     },
   );

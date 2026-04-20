@@ -310,17 +310,26 @@ class _ZeusGridState extends State<ZeusGrid> {
     final local = rb.globalToLocal(e.position);
     _lastMousePosition = local;
 
+    bool isOverArsenal = false;
+    if (widget.isEditing) {
+      if (local.dx >= (rb.size.width - widget.menuStyle.width) &&
+          local.dx <= rb.size.width &&
+          local.dy >= 0 &&
+          local.dy <= rb.size.height) {
+        isOverArsenal = true;
+      }
+    }
+
     bool overGrid =
         local.dx >= -40 &&
         local.dx <= (rb.size.width + 40) &&
         local.dy >= -40 &&
         local.dy <= (rb.size.height + 40);
 
-    bool isOverArsenal = false;
-    if (widget.isEditing) {
-      if (local.dx >= (rb.size.width - widget.menuStyle.width)) {
-        isOverArsenal = true;
-      }
+    // If it's an existing module, we consider it "over grid" even if over arsenal 
+    // so that the ghost remains visible at the edge.
+    if (isOverArsenal && !s.isFromDrawer) {
+      overGrid = true;
     }
 
     if (widget.isEditing && s.isFromDrawer) {
