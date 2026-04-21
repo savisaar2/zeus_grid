@@ -114,39 +114,101 @@ class _ZeusGridState extends State<ZeusGrid> {
         ? size.width / widget.columns!
         : widget.cellSide;
     final double cellH = widget.columns != null ? cellW : widget.cellSide;
-
     final cols = widget.columns ?? (size.width / widget.cellSide).floor();
     final rows = (size.height / cellH).floor();
 
-    final double oldCellW = widget.columns != null
-        ? oldSize.width / widget.columns!
-        : widget.cellSide;
-    final double oldCellH = widget.columns != null ? oldCellW : widget.cellSide;
-
     final lastCols =
         widget.columns ?? (oldSize.width / widget.cellSide).floor();
-    final lastRows = (oldSize.height / oldCellH).floor();
+    final double lastCellH = widget.columns != null
+        ? oldSize.width / widget.columns!
+        : widget.cellSide;
+    final lastRows = (oldSize.height / lastCellH).floor();
 
-    // Optimization: only push if bounds shrank
+    // Optimization: only reflow if bounds shrank
     if (cols >= lastCols && rows >= lastRows) return;
 
+    final fitting = <ZeusModule>[];
+    final overflowing = <ZeusModule>[];
+
     for (var m in widget.modules) {
-      int newX = m.x;
-      int newY = m.y;
-      bool pushed = false;
+      if (m.x + m.w <= cols && m.y + m.h <= rows) {
+        fitting.add(m);
+      } else {
+        overflowing.add(m);
+      }
+    }
 
-      if (m.x + m.w > cols) {
-        newX = (cols - m.w).clamp(0, cols);
-        pushed = true;
+    if (overflowing.isEmpty) return;
+
+    // 1. Occupancy Map from fitting modules
+    final occupied = <String>{};
+    void markOccupied(int tx, int ty, int tw, int th) {
+      for (int i = tx; i < tx + tw; i++) {
+        for (int j = ty; j < ty + th; j++) {
+          occupied.add('$i,$j');
+        }
       }
-      if (m.y + m.h > rows) {
-        newY = (rows - m.h).clamp(0, rows);
-        pushed = true;
+    }
+
+    for (var m in fitting) {
+      markOccupied(m.x, m.y, m.w, m.h);
+    }
+
+    bool isOccupied(int tx, int ty, int tw, int th) {
+      for (int i = tx; i < tx + tw; i++) {
+        for (int j = ty; j < ty + th; j++) {
+          if (occupied.contains('$i,$j')) return true;
+        }
+      }
+      return false;
+    }
+
+    // 2. Sort overflowing modules by visual order
+    overflowing.sort((a, b) {
+      if (a.y != b.y) return a.y.compareTo(b.y);
+      return a.x.compareTo(b.x);
+    });
+
+    // 3. Reflow each overflowing module
+    for (var m in overflowing) {
+      int newW = m.w;
+      if (newW > cols) {
+        newW = cols;
       }
 
-      if (pushed) {
-        widget.onModuleUpdate(m.copyWith(x: newX, y: newY));
+      final double ar = m.w / m.h;
+      int newH = (newW / ar).round();
+
+      // Apply constraints
+      newW = newW.clamp(m.minW, m.maxW ?? cols);
+      newH = newH.clamp(m.minH, m.maxH ?? 9999);
+
+      if (newW > cols) newW = cols;
+
+      // Find available slot (first-fit)
+      int foundX = 0;
+      int foundY = 0;
+      bool found = false;
+
+      for (int y = 0; !found; y++) {
+        for (int x = 0; x <= cols - newW; x++) {
+          if (!isOccupied(x, y, newW, newH)) {
+            foundX = x;
+            foundY = y;
+            found = true;
+            break;
+          }
+        }
+        if (y > 2000) break;
       }
+
+      if (foundX != m.x || foundY != m.y || newW != m.w || newH != m.h) {
+        widget.onModuleUpdate(
+          m.copyWith(x: foundX, y: foundY, w: newW, h: newH),
+        );
+      }
+
+      markOccupied(foundX, foundY, newW, newH);
     }
   }
 

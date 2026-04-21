@@ -1,3 +1,10 @@
+## 1.3.0 - Aspect Ratio Reflow (Approach 3)
+
+* **New Feature: Aspect Ratio-Driven Grid Reflow** - Replaced aggressive boundary pushing with a smart reflow system. Modules that overflow the viewport now scale down to maintain their original aspect ratio (respecting constraints) and reflow to the first available slot.
+* **UX: Visual Stability** - Reflow is now selective; modules that still fit the new viewport remain in their original "tactical" positions, while only overflowing modules are re-packed.
+* **Refinement: Reflow Logic** - Implemented a first-fit packing algorithm using an occupancy map to ensure non-overlapping layouts during window resizing.
+* **Fix: Tests** - Updated and added new test cases to verify aspect ratio scaling and reflow accuracy.
+
 ## 1.2.1 - UX Refinement
 
 * **Fix: Intentional Docking** - Refined the module removal logic to distinguish between "outside the window" (snaps back to edge) and "inside the Arsenal" (docks/removes).
