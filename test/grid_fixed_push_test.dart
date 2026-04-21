@@ -52,7 +52,15 @@ void main() {
     WidgetTester tester,
   ) async {
     List<ZeusModule> modules = [
-      const ZeusModule(id: 'wide', x: 0, y: 0, w: 100, h: 50, minW: 10, minH: 5),
+      const ZeusModule(
+        id: 'wide',
+        x: 0,
+        y: 0,
+        w: 100,
+        h: 50,
+        minW: 10,
+        minH: 5,
+      ),
     ];
 
     await tester.binding.setSurfaceSize(const Size(1000, 1000));
